@@ -1,0 +1,27 @@
+{% extends 'main/index.html' %}
+
+{% block content %}
+
+{% if request.user.is_authenticated %}
+{% if form.who.value == request.user.id %}
+
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.title }}
+    {{ form.text }}
+    
+    <input type="hidden" name="who" value='{{ request.user.id }}' class="form-control" placeholder="Чья заметка" required="" id="id_who">
+    <span>{{ error }}</span>
+    <button class="btn btn-warning" type="submit">Редактировать</button>
+
+</form>
+{% else %}
+<h1>Это не ваша заметка</h1>
+{% endif %}
+
+{% else %}
+<h1>Вы незарегистрированны</h1>
+
+{% endif %}
+{% endblock %}
