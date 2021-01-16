@@ -1,0 +1,27 @@
+
+{% extends 'main/index.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'main/main.css' %}">
+{% endblock %}
+
+{% block content %}
+
+{% for i in blogs %}
+
+    <div class="card" style="margin-top: 15px;">
+        <h5 class="card-header">{{ i.name }}</h5>
+        <div class="card-body">
+            <p class="card-text">{{ i.tagline }}</p>
+            
+            <a href="{{ i.id }}" class="btn btn-primary">Go somewhere</a>
+        </div>
+        </div>
+
+
+{% endfor %}
+    
+{% endblock %}
+
+

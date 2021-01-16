@@ -1,0 +1,24 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'main/main.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<form method="POST" action="{% url 'create_post' pk %}">
+    {% csrf_token %}
+
+
+      <input type="text" name="headline" required placeholder="Название поста" style="width: 200px;">
+      <p></p>
+      <textarea name="body_text" required placeholder="Описание поста" style="width: 70%;"></textarea>
+      <p></p>
+      <input type="submit" value="Отправить" class="btn btn-success">
+        
+        
+
+</form>
+    
+{% endblock %}

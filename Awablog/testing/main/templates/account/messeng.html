@@ -1,0 +1,10 @@
+{% extends 'main/index.html' %}
+
+{% load static %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'main/main.css' %}">
+{% endblock %}
+
+{% block content %}
+    {{ mes | safe }}
+{% endblock %}

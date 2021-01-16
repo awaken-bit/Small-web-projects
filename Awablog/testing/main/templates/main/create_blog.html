@@ -1,0 +1,27 @@
+{% extends 'main/index.html' %}
+
+{% load static %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'main/main.css' %}">
+{% endblock %}
+
+{% block content %}
+{% if new_user == True %}
+    <h1>Создание блога</h1>
+    <form method="POST" action="{% url 'create_blog' %}">
+        {% csrf_token %}
+
+
+          <input type="text" name="blog" required placeholder="Название вашего блога" style="width: 200px;">
+          <p></p>
+          <input type="text" name="tagline" required placeholder="Описание блога" style="width: 200px;">
+          <p></p>
+          <input type="submit" value="Отправить" class="btn btn-success">
+            
+            
+    
+    </form>
+{% else %}
+<h1>Вы не можете создать блог</h1>
+{% endif %}
+{% endblock %}
