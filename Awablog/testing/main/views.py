@@ -5,12 +5,14 @@ from django.views.generic import DetailView
 import datetime
 
 def delete_post(request, pk):
-    autors = [ i.author_blog.all() for i in Entry.objects.get(id=pk).blog.all()]
-    #autors = [i.user_main.all() for i in autors]
-    #autors = [i.id for i in autors]
-    autors = [ i.user_main.all() for i in autors[0]][0]
-    autors = [ i.id for i in autors]
-    print(autors[0])
+    try:
+        autors = [ i.author_blog.all() for i in Entry.objects.get(id=pk).blog.all()]
+        #autors = [i.user_main.all() for i in autors]
+        #autors = [i.id for i in autors]
+        autors = [ i.user_main.all() for i in autors[0]][0]
+        autors = [ i.id for i in autors]
+    except:
+        return render(request, 'account/messeng.html',{'mes': '<p>Нет такой заметки</p>'})
     if request.user.id == autors[0]:
         blog_id = Entry.objects.get(id=pk).blog.all()
         for i in blog_id:
@@ -19,8 +21,10 @@ def delete_post(request, pk):
         del_entr = Blog.objects.get(id=s).entry_set.all()
 
         for i in del_entr:
-            del_entr = i 
-        del_entr.delete()
+            if i.id == pk:
+                del_entr = i
+                del_entr.delete()
+                break
 
         return redirect('blog_post', s)
     else:
