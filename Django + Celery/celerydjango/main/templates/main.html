@@ -1,0 +1,48 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="row row-cols-1 row-cols-md-3 g-4">
+
+    <div class="col" >
+        <div class="card" style="background-color: rgb(153, 255, 86);">
+            <div class="card-body">
+                <h5 style="color: aliceblue;">OIL :</h5>
+                <h3 class="card-text">{{ cours.oil }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card" style="background-color: rgb(153, 255, 86);">
+            <div class="card-body">
+                <h5 style="color: aliceblue;">EURO :</h5>
+                <h3 class="card-text">{{ cours.euro }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card" style="background-color: rgb(153, 255, 86);">
+            <div class="card-body">
+                <h5 style="color: aliceblue;">DOLLAR :</h5>
+                <h3 class="card-text">{{ cours.dollar }}</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+{% for i in news %}
+    <div class="col">
+        <div class="card" style="border-radius: 10px;">
+        <div class="card-body">
+            <h5 class="card-title">{{ i.title }}</h5>
+            <p class="card-text">{{ i.subtitle }}</p>
+            <a href="{% url 'new' i.id %}" class="btn btn-primary">Подробнее</a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+{% endblock %}

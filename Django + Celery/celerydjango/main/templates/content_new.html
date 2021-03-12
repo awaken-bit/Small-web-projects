@@ -1,0 +1,11 @@
+{% extends 'index.html' %}
+
+{% block content %}
+
+<div class="card" style="width: 70%; margin-left: auto; margin-right: auto; border-radius: 20px;">
+    <div class="card-body">
+        <h4 class="card-title">{{ content.title }}</h4>
+        <p class="card-text">{{ content.content }}</p>
+    </div>
+</div>
+{% endblock %}
