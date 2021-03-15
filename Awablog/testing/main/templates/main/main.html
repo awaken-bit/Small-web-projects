@@ -20,13 +20,14 @@
           {% for a in i.authors.all %}
           <p class="card-text">Автор: {{ a }}</p>
           {% endfor %}
-
+          <p>Коментариев: {{ i.comment_set.count }}</p>
           <p class="btn btn-success" style="float: right; margin-right: 10px;">Like: {{ i.likeq_set.count }}</p>
           <p class="btn btn-danger" style="float: right; margin-right: 10px;">Dizlike: {{ i.dizlikeq_set.count }}</p>
 
 
 
-          <a href="{% url 'post_us' i.id %}" class="btn btn-primary">Go somewhere</a>
+          <a href="{% url 'post_us' i.id %}" class="btn btn-primary" >Читать</a>
+          
         </div>
       </div>
 {% endfor %}

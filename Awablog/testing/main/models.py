@@ -40,8 +40,17 @@ class Likeq(models.Model):
     post = models.ManyToManyField(Entry)
     def __str__(self):
         return str(list(self.post.all()) + list(self.author.all()))
+
 class Dizlikeq(models.Model):
     author = models.ManyToManyField(User)
     post = models.ManyToManyField(Entry)
     def __str__(self):
         return str(list(self.post.all()) + list(self.author.all()))
+
+
+class Comment(models.Model):
+    author_comment = models.ForeignKey(User, on_delete= models.CASCADE)
+    entry_blog = models.ForeignKey(Entry, on_delete= models.CASCADE)
+    text = models.TextField()
+    def __str__(self) -> str:
+        return f'{self.author_comment} / {self.text} / {self.entry_blog.headline}'

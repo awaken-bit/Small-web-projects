@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Author, Blog, Entry, Likeq, User_vie, Dizlikeq
+from .models import Author, Blog, Comment, Entry, Likeq, User_vie, Dizlikeq
 
 from django.views.generic import DetailView
 import datetime
@@ -12,7 +12,7 @@ def delete_post(request, pk):
         autors = [ i.user_main.all() for i in autors[0]][0]
         autors = [ i.id for i in autors]
     except:
-        return render(request, 'account/messeng.html',{'mes': '<p>Нет такой заметки</p>'})
+        return render(request, 'account/messeng.html',{'mes': '<p>Нет такого поста</p>'})
     if request.user.id == autors[0]:
         blog_id = Entry.objects.get(id=pk).blog.all()
         for i in blog_id:
@@ -57,10 +57,24 @@ def create_post(request, pk):
         return render(request, 'main/create_post.html',{'pk': pk})
 
 
-class BlogPost(DetailView):
-    model = Entry
-    template_name = 'main/post.html'
-    context_object_name = 'note'
+def blog_post(request, pk):
+    if request.method == 'POST':
+        if request.user.id == None:
+            return render(request,'account/messeng.html',{'mes': '<p>Вы не можете писать комментарии не зарегистрировавшись</p>'})
+        else:
+            comment = Comment(  text = request.POST['text'],
+                                entry_blog = Entry.objects.get(id=pk),
+                                author_comment = request.user
+                                )
+            comment.save()
+            return redirect('post_us', pk)
+    else:
+        try:
+            post = Entry.objects.get(id=pk)
+        except:
+            return render(request, 'account/messeng.html',{'mes': '<p>Нет такого поста</p>'})
+        return render(request, 'main/post.html', {'note': post})
+
 
 def dashboard(request):
     if request.method == 'POST':
@@ -153,7 +167,11 @@ def blogs_home(reqest):
     return render(reqest, 'main/blogs.html',data)
 
 def like(reqest, pk):
-    if Likeq.objects.filter(author=reqest.user,post=Entry.objects.get(id=pk)).count() >= 1:
+    try:
+        likes = Likeq.objects.filter(author=reqest.user,post=Entry.objects.get(id=pk)).count()
+    except:
+        return render(reqest,'account/messeng.html',{'mes': '<p>Вы не зарегистрированы</p>'})
+    if likes >= 1:
         return render(reqest,'account/messeng.html',{'mes': '<p>Вы уже оценивали этот пост</p>'})
     else:
         post_i = Entry.objects.get(id=pk)
@@ -171,7 +189,11 @@ def like(reqest, pk):
 
 
 def dizlike(reqest, pk):
-    if Dizlikeq.objects.filter(author=reqest.user,post=Entry.objects.get(id=pk)).count() >= 1:
+    try:
+        dizlikes = Dizlikeq.objects.filter(author=reqest.user,post=Entry.objects.get(id=pk)).count()
+    except:
+        return render(reqest,'account/messeng.html',{'mes': '<p>Вы не зарегистрированы</p>'})
+    if dizlikes >= 1:
         return render(reqest,'account/messeng.html',{'mes': '<p>Вы уже оценивали этот пост</p>'})
     else:
         post_i = Entry.objects.get(id=pk)

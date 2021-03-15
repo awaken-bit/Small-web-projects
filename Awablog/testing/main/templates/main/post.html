@@ -8,14 +8,35 @@
 
 {% block content %}
 
-        <h1 style="text-align: center;">{{ note.headline }}</h1>
-        <hr style="height: 30px;">
-        <h3 style="text-align: center;">{{ note.body_text }}</h3>
-        <hr>
+        <div class="card" style="width: 70%; margin-left: auto; margin-right: auto; border-radius: 15px;">
+                <div class="card-body">
+                        <h4 class="card-title">{{ note.headline }}</h4>
+                        <p class="card-text">{{ note.body_text }}</p>
+                </div>
+        </div>
+
+
         <a href="{% url 'like' note.id %}" class="btn btn-success">Like: {{ note.likeq_set.count }}</a>
         <a href="{% url 'dizlike' note.id %}" class="btn btn-danger">Dizlike: {{ note.dizlikeq_set.count }}</a>
+        <hr>
+        <form method="POST" action="{% url 'post_us' note.id %}">
+                {% csrf_token %}
+                <textarea name="text" required placeholder="Комментарий" style="width: 70%;"></textarea>
+                <p><input type="submit" value="Отправить" class="btn btn-success"></p>
+                
+        </form>
+        <p></p>
+{% for i in note.comment_set.all %}
+        <div class="card">
+                <div class="card-body">
+                        <blockquote class="blockquote mb-0">
+                        <h6>{{ i.author_comment.username }}</h6>
+                        <footer class="blockquote-footer">{{ i.text }}</footer>
+                        </blockquote>
+                </div>
+        </div>
+        
+{% endfor %}
 
 
-
-    
 {% endblock %}
