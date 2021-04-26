@@ -1,5 +1,5 @@
 from .models import Artiles
-from django.forms import ModelForm, TextInput, Textarea,IntegerField
+from django.forms import ModelForm, TextInput, Textarea
 
 class ArtilesForm(ModelForm):
     class Meta:
@@ -14,6 +14,7 @@ class ArtilesForm(ModelForm):
             }),
             'text': Textarea(attrs={
                 'class': 'form-control',
+                'rows': '5',
                 'placeholder': 'Текст заметки'
 
             }),

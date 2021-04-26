@@ -2,7 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Artiles(models.Model):
-    title = models.CharField('Название',max_length=70)
+    title = models.CharField('Название',max_length=70, blank=True)
     who = models.IntegerField(default=0)
     text = models.TextField('Статья')
 

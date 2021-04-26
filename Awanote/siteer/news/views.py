@@ -1,40 +1,42 @@
 from django.shortcuts import render, redirect
 from  .models import Artiles
 from .forms import ArtilesForm
-from django.views.generic import DetailView, UpdateView, DeleteView
+
+def delete_news(request, pk):
+    note = Artiles.objects.get(id=pk)
+    if note.who == request.user.id:
+        note.delete()
+        return redirect('news_home')
+    else:
+        return redirect('news_home')
 
 
-class NewsDeleteAR(DeleteView):
-    model = Artiles
-    template_name = 'news/delete.html'
-    success_url = '/news/'
-
-
-class NewsUpdateAR(UpdateView):
-    model = Artiles
-    template_name = 'news/update.html'
-    form_class = ArtilesForm
-
-# Create your views here.
 def news_home(reqest):
     news = Artiles.objects.order_by('-id')
-    return render(reqest, 'news/news_home.html', {'news': news})
-
-def create(reqest):
     error = ''
     if reqest.method == 'POST':
-        form = ArtilesForm(reqest.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('news_home')
+        if 'news_text' in reqest.POST:
+            note = Artiles.objects.get(id=reqest.POST['news_id'])
+            if note.who == reqest.user.id:
+                note.text = reqest.POST['news_text']
+                note.title = reqest.POST['news_title']
+                note.save()
+            else:
+                return redirect('news_home')
         else:
-            error = 'Форма неправильно заполнена'
+            form = ArtilesForm(reqest.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('news_home')
+            else:
+                error = 'Форма неправильно заполнена'
     form = ArtilesForm()
 
 
     data = {
         
         'form': form,
-        'error': error
+        'error': error,
+        'news': news,
     }
-    return render(reqest, 'news/create.html', data)
+    return render(reqest, 'news/news_home.html', data)
