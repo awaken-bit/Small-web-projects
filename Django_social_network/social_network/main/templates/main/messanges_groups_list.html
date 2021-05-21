@@ -1,0 +1,36 @@
+{% extends 'main/index.html' %}
+
+{% block content %}
+    <div style=" margin: 0px auto 10px; width: max-content;">
+        <a class="btn btn-outline-success" href="{% url 'search_groups' %}" style="display: block; width: 300px;">
+            Найти группы
+        </a>
+        <a class="btn btn-warning" href="{% url 'create_group' %}" style="display: block; width: 300px; margin-top: 5px;">
+            Создать группу
+        </a>
+    </div>
+    
+    {% for i in groups_list %}
+
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-header">
+                {{ i.0.name }}
+            </div>
+            <div class="card-body">
+                <p>{{ i.0.text }}</p>
+                <img src="{{ MEDIA_URL }}{{ i.0.image.url }}" height="100px" width="100px" style="border-radius: 50px; object-fit: cover">
+                <a href="{% url 'group_chat' i.0.id %}" class="btn btn-primary">Написать</a>
+                <a href="{% url 'delete_group' i.0.id %}" class="btn btn-outline-danger">Выйти из группы</a>
+                
+                
+            </div>
+            <div class="card-footer">
+
+                {% if profile in i.0.participants.all %}
+                    <small class="text-muted">{{ i.1 }}</small>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+
+{% endblock %}

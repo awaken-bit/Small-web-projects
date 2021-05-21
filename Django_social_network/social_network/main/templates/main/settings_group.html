@@ -1,0 +1,50 @@
+{% extends 'main/index.html' %}
+
+{% block content %}
+    <p>Настройки группы</p>
+    <form action="{% url 'settings_group' group.id %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if group.image %}
+            <img src="{{ MEDIA_URL }}{{ group.image.url }}" style="height: 200px; width: 200px; border-radius: 100px; object-fit: cover; margin-bottom: 10px;">
+        {% else %}
+            <img src="/media/images/none_photo.jpg" height="200px" width="200px" style="border-radius: 100px; object-fit: cover; margin-bottom: 10px;">
+        {% endif %}
+        <input class="form-control" type="file" name="group_img" accept=".jpg, .jpeg, .png" style="margin-bottom: 50px;">
+
+        <input type="text" class="form-control" name="group_name" value="{{ group.name }}" placeholder="Название группы">
+        <textarea class="form-control" name="group_text"  rows="10" placeholder="Описание группы">{{ group.text }}</textarea>
+        <button type="submit" class="btn btn-success" style="float: right;">Изменить</button>
+    </form>
+    
+    <div style="width: 500px;">
+        <div style="width: 250px; margin: 0px; float: left;">
+            <form action="{% url 'settings_group' group.id %}" method="POST" >
+                {% csrf_token %}
+                <select class="form-select" multiple size="13"  name="deleted_participants">
+                    {% for i in group.participants.all %}
+                        <option value="{{ i.id }}">{{ i.owner.first_name }} {{ i.owner.last_name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-warning" style="width: 250px;">Удалить участников</button>
+            </form>
+        </div>
+        
+        <div style="width: 250px; margin: 0px; float: right;">
+            <form action="{% url 'settings_group' group.id %}" method="POST" >
+                {% csrf_token %}
+                <select class="form-select" multiple size="13" name="appended_participants">
+                    {% for i in profile.friends.all %}
+                        {% if i not in group.participants.all %}
+                            <option value="{{ i.id }}">{{ i.owner.first_name }} {{ i.owner.last_name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-success" style="width: 250px;">Добавить участников</button>
+            </form>
+        </div>
+    </div>
+    
+    
+    
+    
+{% endblock %}

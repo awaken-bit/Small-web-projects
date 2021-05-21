@@ -1,0 +1,33 @@
+{% extends 'main/index.html' %}
+
+{% block content %}
+    <h3>Параметры</h3>
+    <span class='user'>
+        
+        {% if request.user.is_authenticated %}
+        <form action="{% url 'dashboard' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="input-group mb-3" style="width: 500px; margin-bottom: 200px;">
+                <input type="text" name="first_name" class="form-control" placeholder="Имя" value="{{ request.user.first_name }}">
+                <span class="input-group-text">@</span>
+                <input type="text" name="last_name" class="form-control" placeholder="Фамилия" value="{{ request.user.last_name }}">
+            </div>
+            {% if profile.image %}
+                <img src="{{ MEDIA_URL }}{{ profile.image.url }}" style="height: 200px; width: 200px; border-radius: 100px; object-fit: cover; margin-bottom: 20px; margin-left: 62vw;">
+            {% else %}
+                <img src="/media/images/none_photo.jpg" height="200px" width="200px" style="border-radius: 100px; object-fit: cover; margin-bottom: 20px; margin-left: 62vw;">
+            {% endif %}
+            
+            <div class="mb-3">
+                <label class="form-label">О вас</label>
+                <textarea class="form-control" name="bio" rows="10">{{ profile.bio }}</textarea>
+            </div>
+            <input class="form-control" type="file" name="user_img" accept=".jpg, .jpeg, .png">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+        {% else %}
+            <h4>Вы не зарегистрированы</h4>
+        {% endif %}
+    </span>
+    
+{% endblock %}

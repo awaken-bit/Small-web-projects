@@ -1,0 +1,35 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+
+{% block content %}
+    <h1>Это Поиск друзей</h1>
+    <form action="{% url 'search_friends' %}" method="post" class="input-group mb-3">
+        {% csrf_token %}
+        <input type="text" name="name" class="form-control" placeholder="Имя и фамилия вашего друга">
+        <button type="submit" class="btn btn-primary">Найти друзей</button>
+    </form>
+    {% if profiles %}
+        {% for i in profiles %}
+            <div class="card" style="margin-bottom: 10px;">
+                <div class="card-header">
+                    {{ i.owner.first_name }} {{ i.owner.last_name }}
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ i.bio }}</p>
+                    {% if i.image %}
+                        <img src="{{ MEDIA_URL }}{{ i.image.url }}" height="100px" width="100px" style="border-radius: 50px; object-fit: cover">
+                    {% else %}
+                        <img src="/media/images/none_photo.jpg" height="100px" width="100px" style="border-radius: 50px; object-fit: cover">
+                    {% endif %}
+                    {% if i in friends %}
+                        <button class="btn btn-secondary btn-sm" disabled style="background-color: rgb(99, 99, 99);">У вас в друзьях</button>
+                    {% else %}
+                        <a href="{% url 'messanges' i.owner.id %}" class="btn btn-primary">Написать</a>
+                        <a href="{% url 'append_friend' i.id %}" class="btn btn-outline-success">Добавить в друзья</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endblock %}

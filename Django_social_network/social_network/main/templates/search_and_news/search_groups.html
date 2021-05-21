@@ -1,0 +1,35 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+
+{% block content %}
+    <h1>Это Поиск групп</h1>
+    <form action="{% url 'search_groups' %}" method="post" class="input-group mb-3">
+        {% csrf_token %}
+        <input type="text" name="name" class="form-control" placeholder="Название вашей группы">
+        <button type="submit" class="btn btn-primary">Найти группы</button>
+    </form>
+    {% if groups %}
+        {% for i in groups %}
+            <div class="card" style="margin-bottom: 10px;">
+                <div class="card-header">
+                    {{ i.name }}
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ i.text }}</p>
+                    {% if i.image %}
+                        <img src="{{ MEDIA_URL }}{{ i.image.url }}" height="100px" width="100px" style="border-radius: 50px; object-fit: cover">
+                    {% else %}
+                        <img src="/media/images/none_photo.jpg" height="100px" width="100px" style="border-radius: 50px; object-fit: cover">
+                    {% endif %}
+                    {% if i in user_groups %}
+                        <button class="btn btn-secondary btn-sm" disabled style="background-color: rgb(99, 99, 99);">У вас в друзьях</button>
+                    {% else %}
+                        <a href="{% url 'group_chat' i.id %}" class="btn btn-primary">Написать</a>
+                        <a href="{% url 'append_group' i.id %}" class="btn btn-outline-success">Добавить в группы</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endblock %}

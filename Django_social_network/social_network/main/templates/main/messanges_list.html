@@ -1,0 +1,28 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+
+{% block content %}
+
+    {% for i in messanges_friends_list %}
+
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-header">
+                {{ i.1.owner.first_name }} {{ i.1.owner.last_name }}
+            </div>
+            <div class="card-body">
+                {% if i.1.image %}
+                    <img src="{{ MEDIA_URL }}{{ i.1.image.url }}" height="100px" width="100px" style="border-radius: 50px; object-fit: cover">
+                {% else %}
+                    <img src="/media/images/none_photo.jpg" height="100px" width="100px" style="border-radius: 50px; object-fit: cover">
+                {% endif %}
+                <a href="{% url 'messanges' i.1.owner.id %}" class="btn btn-primary">Написать</a>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">{{ i.0 }}</small>
+            </div>
+        </div>
+    {% endfor %}
+    <p>{{ test }}</p>
+    <p>{{ te }}</p>
+{% endblock %}

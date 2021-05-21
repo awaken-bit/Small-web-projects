@@ -1,0 +1,292 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+
+{% block css %}
+<style>
+    .card{
+        max-width: 700px;
+        margin: 0px auto 0px;
+    }
+    .card img{
+        object-fit: contain;
+        max-width: auto;
+        max-height: 700px;
+    }
+    .card .date{
+        margin: 0px;
+    }
+    .estimation{
+        margin-bottom: 8px;
+    }
+    .form{
+        max-width: 700px; 
+        margin: 0px auto;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+    {% if profile.image %}
+        <img src="{{ MEDIA_URL }}{{ profile.image.url }}" height="100px" width="100px" style="border-radius: 50px; object-fit: cover">
+    {% else %}
+        <img src="/media/images/none_photo.jpg" height="100px" width="100px" style="border-radius: 50px; object-fit: cover">
+    {% endif %}
+    
+    <h6>{{ profile.owner.first_name }} {{ profile.owner.last_name }}</h6>
+    <h4>{{ profile.bio }}</h4>
+
+<form action="{% url 'create_post' %}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3 form">
+        <input class="form-control" type="file" name="file_post" accept=".jpg, .jpeg, .png">
+    </div>
+    <div class="mb-3 form" >
+        <textarea class="form-control" name="text_post" rows="3" placeholder="Текст поста"></textarea>
+    </div>
+    <div class="mb-3 form" >
+        <button class="btn btn-warning" type="submit">Опубликовать пост</button>
+    </div>
+</form>
+
+    <div id="posts_list">
+        {% for i in posts %}
+            {% if forloop.last %}
+                <div class="card mb-3 last_post" id="{{ i.id }}">
+            {% else %}
+                <div class="card mb-3">
+            {% endif %}
+                {% if i.image %}
+                    <img src="{{ MEDIA_URL }}{{ i.image.url }}" class="card-img-top">
+                {% endif %}
+                <div class="card-body">
+                <p class="card-text">{{ i.text | safe }}</p>
+                
+                <small class="text-muted">{{ i.pub_date.day }}-{{ i.pub_date.month }}-{{ i.pub_date.year }} {{ i.pub_date.hour }}:{{ i.pub_date.minute }}</small>
+                <p class="date"><small class="text-muted">{{ i.owner.owner.first_name }} {{ i.owner.owner.last_name }}</small></p>
+                {{ i.like_set.count }}
+                <img src="{% static 'img/like_none.png' %}" class="estimation" height="20" width="20">
+
+                {{ i.dizlike_set.count }}
+                <img src="{% static 'img/dizlike_none.png' %}" class="estimation" height="20" width="20">
+                
+                <button class="comments" id=" {{ i.id }} " style="background-color: white; border: 0; padding: 0px; margin-left: 10px;">
+                    {{ i.comment_set.count }}
+                    <img src="https://img.icons8.com/fluent-systems-regular/48/000000/comments--v2.png" class="estimation" height="20" width="20">
+                </button>
+                
+                </div>
+            </div>
+
+        {% endfor %}
+    </div>
+    <div style="margin: 0px auto; width: max-content"><button class="btn btn-success more_posts">Ещё посты</button></div>
+{% endblock %}
+
+{% block js %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script>
+        let dict_comments_states = {}
+
+        function edit_document_comments(data, parametrs){
+            let comment_button = document.getElementById(parametrs.id)
+            let card_comment = comment_button.parentNode.parentNode
+            if ('text' in parametrs){
+                if (data.message == 'Success'){
+                    console.log(parametrs, data)
+                    let list_comments = document.getElementById(`   ${parametrs.id}`)
+                    let comment_button = document.getElementById(parametrs.id)
+                    comment_button.innerHTML = (Number.parseInt(comment_button.textContent)+1) + 
+                    ' <img src="https://img.icons8.com/fluent-systems-regular/48/000000/comments--v2.png" class="estimation" height="20" width="20">'
+                    let img
+                    if (data.data.owner.image){
+                        img = data.data.owner.image
+                    }else{
+                        img = '/media/images/none_photo.jpg'
+                    }
+                    list_comments.innerHTML += `<div class="card">
+                                <div class="card-header" style='padding: 5px; background-color: rgb(230, 230, 230);'>
+                                    <img src="${img}" 
+                                    height="30px" width="30px" style="border-radius: 15px; object-fit: cover">
+
+                                    <small>${data.data.owner.owner.first_name} ${data.data.owner.owner.last_name}</small>
+                                </div>
+                                <div class="card-body" style='padding: 5px'>
+
+                                    <small class="card-text">${data.data.text}</small>
+                                    <hr style="margin: 10px auto 5px">
+                                    <small class="text-muted">${data.data.date} ${data.data.time}</small>
+                                </div>
+                                </div>`
+                    list_comments.scrollTop = list_comments.scrollHeight
+                }
+            }else{
+                if (` ${parametrs.id} ` in dict_comments_states && dict_comments_states[` ${parametrs.id} `] == true  ){
+                    dict_comments_states[` ${parametrs.id} `] = false
+                    let list_comments = document.getElementById(`   ${parametrs.id}`)
+                    let send_messeng =  document.getElementById(`   ${parametrs.id}    `)
+                    list_comments.remove()
+                    send_messeng.remove()
+                }else{
+                    dict_comments_states[` ${parametrs.id} `] = true
+
+                    let div = document.createElement('div');
+                    div.id = `   ${parametrs.id}`;
+                    
+                    div.style.overflow = 'auto'
+                    div.style.maxHeight = '500px'
+                    div.style.maxWidth = '700px'
+                    div.style.margin = '0px auto 20px'
+
+                    let html = ""
+                    for (let i in data.message.comments){
+                        if (data.message.comments[i].owner.image){
+                            img = data.message.comments[i].owner.image
+                        }else{
+                            img = '/media/images/none_photo.jpg'
+                        }
+
+                        html += `<div class="card">
+                            <div class="card-header" style='padding: 5px; background-color: rgb(230, 230, 230);'>
+                                <img src="${img}" 
+                                height="30px" width="30px" style="border-radius: 15px; object-fit: cover">
+
+                                <small>${data.message.comments[i].owner.owner.first_name} ${data.message.comments[i].owner.owner.last_name}</small>
+                            </div>
+                            <div class="card-body" style='padding: 5px'>
+
+                                <small class="card-text">${data.message.comments[i].text}</small>
+                                <hr style="margin: 10px auto 5px">
+                                <small class="text-muted">${data.message.comments[i].date} ${data.message.comments[i].time}</small>
+                            </div>
+                            </div>`;
+                    }
+                    div.innerHTML = html
+
+                    let send_comment = document.createElement('div');
+                    send_comment.id = `   ${parametrs.id}    `;
+                    send_comment.className = 'input-group mb-3'
+                    send_comment.style.margin = '0px auto 0px'
+                    send_comment.style.maxWidth = '700px'
+                    send_comment.innerHTML = `<input class="form-control" placeholder="Leave a comment here" id="send_messange_input${parametrs.id}"></input> \
+                    <button id ="send_messange_button${parametrs.id}" class="btn btn-primary">Отправить</button>`
+
+                    send_comment.lastElementChild.onclick = function(){
+                        console.log('Click!!')
+                        let input = document.getElementById(`send_messange_input${parametrs.id}`)
+                        console.log(input.value)
+                        if (input.value != ''){
+                            api_comments({
+                                text: input.value,
+                                id: parametrs.id
+                            })
+                        }
+                        input.value = ''
+                    }
+                    card_comment.after(div)
+                    div.after(send_comment)
+                    console.log(card_comment)
+                }
+            }
+            
+            
+        }
+        
+        function api_comments(dat) {
+            $.ajax({
+                url: '{% url "comment_api" %}',
+                method: 'POST',
+                data: dat,
+                headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                success: function(data) {
+                    edit_document_comments(data, dat)
+                },
+                error: function(response){
+                    console.log(response);
+                }
+            })
+        }
+
+
+        
+        function parse_comment_buttons(){
+            let comments_butons = document.getElementsByClassName('comments')
+            for(let i=0; i < comments_butons.length; i++){
+                let comment = comments_butons.item(i)
+    
+                comment.onclick = function () {
+                    data = {"id":comment.id}
+                    api_comments(data)
+                }
+            }
+        }
+        parse_comment_buttons()
+
+        let more_posts_button = document.getElementsByClassName('more_posts')
+        more_posts_button[0].onclick = function () {
+            let last_post =  document.getElementsByClassName('last_post')
+            last_post = last_post[0]
+            let data = {
+                'last_post': last_post.id,
+                'user':true
+            }
+            $.ajax({
+                url: '{% url "dynamic_post_load" %}',
+                method: 'POST',
+                data: data,
+                headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                success: function(data) {
+                    console.log(data)       // Добавляем данные и меняем класс карточки
+                    let div = last_post.parentNode
+                    let html = ''
+                    data = data.message
+                    for(let i=0; i < data.length; i++){
+                        if ('last_post' in data[i]){
+                            html += `<div class="card mb-3 last_post" id="${data[i].id}">`
+                        }else{
+                            html += `<div class="card mb-3">`
+                        }
+                        
+                        if (data[i].image){
+                            html += `<img src="{{ MEDIA_URL }}${data[i].image}" class="card-img-top">` 
+                        }
+                        html += `<div class="card-body">`
+                                + `<p class="card-text">${data[i].text}</p>`
+                                + `<small class="text-muted">${data[i].pub_date}</small>`
+                                + `<p class="date"><small class="text-muted">${data[i].profile}</small></p>`
+                        html += `<button class="like" id=" ${data[i].id}" style="background-color: white; border: 0; padding: 0px;">`
+                                + `     ${data[i].likes.count}    `
+                        
+                        html += `<img src="{% static 'img/like_none.png' %}" class="estimation" height="20" width="20">`
+                        html += `</button>`
+                            + `<button class="dizlike" id="${data[i].id} " style="background-color: white; border: 0; padding: 0px; margin-left: 5px ;">`
+                                + `     ${data[i].dizlikes.count}    `
+                        
+                        html += `<img src="{% static 'img/dizlike_none.png' %}" class="estimation" height="20" width="20">`
+                        
+                        html += `</button>`
+                            + `<button class="comments" id=" ${data[i].id} " style="background-color: white; border: 0; padding: 0px; margin-left: 10px;">`
+                            + `     ${data[i].comments}     `
+                            + `<img src="https://img.icons8.com/fluent-systems-regular/48/000000/comments--v2.png" class="estimation" height="20" width="20">`
+                            + `</button>`
+                            + `</div></div></div>`
+                    }
+                    last_post.classList.remove("last_post")
+                    last_post.insertAdjacentHTML(
+                        'afterend',
+                        html
+                    )
+                    if (data.length < 4){
+                        more_posts_button[0].style.display = 'none'
+                    }
+                    parse_comment_buttons()
+                },
+                error: function(response){
+                    console.log(response);
+                }
+            })
+        }
+    </script>
+{% endblock %}

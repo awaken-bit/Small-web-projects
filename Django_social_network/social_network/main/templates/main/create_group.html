@@ -1,0 +1,13 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+
+{% block content %}
+    <form action="{% url 'create_group' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="text" class="form-control" name="group_name" placeholder="Название группы">
+        <textarea class="form-control" name="group_text" placeholder="Описание группы"  rows="7"></textarea>
+        <input class="form-control" type="file" name="group_img" accept=".jpg, .jpeg, .png">
+        <button type="submit" class="btn btn-warning">Создать группу</button>
+    </form>
+{% endblock %}

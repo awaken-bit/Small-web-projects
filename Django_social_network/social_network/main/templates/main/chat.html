@@ -1,0 +1,127 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+{% block css %}
+    <style>
+        .card-header{
+            padding: 10px;
+        }
+        .card-body{
+            padding: 10px;
+        }
+        .card-body p{
+            margin: 0px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <div class="form-floating">
+        <div id='chat' style="overflow: auto; height: 60vh;">
+
+            {% for i in messanges %}
+            
+                {% if i.sender.owner.id == request.user.id %}
+                        <div class="card" style="width: 515px; margin: 10px 0px 0px auto;">
+                            <div class="card-header" style="padding: 0px 5px;">
+                                {% if i.sender.image %}
+                                    <img src="{{ MEDIA_URL }}{{ i.sender.image.url }}" height="35px" width="35px" style="border-radius: 35px; object-fit: cover">
+                                {% else %}
+                                    <img src="/media/images/none_photo.jpg" height="35px" width="35px" style="border-radius: 35px; object-fit: cover">
+                                {% endif %}
+                                
+                            {{ i.sender.owner.first_name }} {{ i.sender.owner.last_name }}
+                            </div>
+                            <div class="card-body" style="padding: 5px;">
+                                <p class="card-text">{{ i.text }}</p>
+                                <small class="text-muted">{{ i.pub_date.day }}-{{ i.pub_date.month }}-{{ i.pub_date.year }} {{ i.pub_date.hour }}:{{ i.pub_date.minute }}</small>
+                            </div>
+                        </div>
+                {% else %}
+                        <div class="card" style="width: 515px; margin: 10px auto 0px 0px;">
+                            <div class="card-header" style="padding: 0px 5px;">
+                                {% if i.sender.image %}
+                                    <img src="{{ MEDIA_URL }}{{ i.sender.image.url }}" height="35px" width="35px" style="border-radius: 35px; object-fit: cover">
+                                {% else %}
+                                    <img src="/media/images/none_photo.jpg" height="35px" width="35px" style="border-radius: 35px; object-fit: cover">
+                                {% endif %}
+                            {{ i.sender.owner.first_name }} {{ i.sender.owner.last_name }}
+                            </div>
+                            <div class="card-body" style="padding: 5px;">
+                                <p class="card-text">{{ i.text }}</p>
+                                <small class="text-muted">{{ i.pub_date.day }}-{{ i.pub_date.month }}-{{ i.pub_date.year }} {{ i.pub_date.hour }}:{{ i.pub_date.minute }}</small>
+                            </div>
+                        </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <form>
+            <textarea class="form-control" placeholder="Сообщение" style="height: 100px"></textarea>
+            <button id ='send_messange' class="btn btn-primary" style="float: right;">Отправить</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block js %}
+
+<script>
+        chat_window = document.getElementById('chat');
+        chat_window.scrollTop = chat_window.scrollHeight
+
+        const commentsSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/chat/'
+        + "{{ request.user.id }}"
+        + '/'
+        + "{{ adressen }}"
+        + '/'
+    );
+    commentsSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        console.log(data);
+        let img
+        if ('sender_image' in data['message']){
+            img = data['message']['sender_image']
+        }else{
+            img = '/media/images/none_photo.jpg'
+        }
+        messange_string = `<div class="card-header" style="padding: 0px 5px;">`
+                        + `<img src="${img}" height="35px" width="35px" style="border-radius: 35px; object-fit: cover">`
+                        + ` ${data['message']['first_name']} ${data['message']['last_name']}`
+                        + `</div>`
+                        + `<div class="card-body" style="padding: 5px;">`
+                        + `<p class="card-text">${data['message']['text']}</p>`
+                        + `<small class="text-muted">${data['message']['date']}</small>`
+                        + `</div>`
+            
+        
+        if (data['message']['sender_id'] == "{{ request.user.id }}"){
+            messange_string = '<div class="card" style="width: 515px; margin: 10px 0px 0px auto;">' + messange_string
+        } else {
+            messange_string = '<div class="card" style="width: 515px; margin: 10px auto 0px 0px;">' + messange_string
+        }
+
+        chat_window.insertAdjacentHTML(
+            'beforeend',
+            messange_string
+        )
+        if (chat_window.scrollTop >= chat_window.scrollHeight - 600){
+            chat_window.scrollTop = chat_window.scrollHeight
+        }
+    };
+    document.querySelector('#send_messange').onclick = function(e) {
+        e.preventDefault()
+        const messageInputDom = document.querySelector('.form-control');
+        const text = messageInputDom.value;
+        if (text != ''){
+            commentsSocket.send(JSON.stringify({
+            'text': text
+        }));
+        }
+        
+        messageInputDom.value = '';
+    };
+</script>
+{% endblock %}

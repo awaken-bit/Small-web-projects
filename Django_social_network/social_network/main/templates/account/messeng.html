@@ -1,0 +1,12 @@
+{% extends 'main/index.html' %}
+
+{% block content %}
+    <div class="card text-center" style="margin: 0px auto;">
+        <div class="card-header">
+            Сообщение
+        </div>
+        <div class="card-body">
+            {{ mes | safe }}
+        </div>
+    </div>
+{% endblock %}
