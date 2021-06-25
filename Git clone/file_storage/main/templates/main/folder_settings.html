@@ -1,0 +1,120 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+
+{% block content %}
+
+
+<h4>Настройки папки</h4>
+
+<hr>
+    {% if messeng %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <img src="{% static 'images/warning.svg' %}" width="30px"></img>
+            {{ messeng }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>    
+    {% endif %}
+    <a href="{% url 'folder_view' folder.id %}">Назад к папке</a>
+
+    <form action="{% url 'folder_settings' folder.id %}" enctype="multipart/form-data" method="POST" style="margin-top: 20px;">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="name" class="form-label"><small class="text-muted">Название папки</small></label>
+            <input class="form-control" name="name" id="name" value="{{ folder.name }}">
+        </div>
+        <div class="mb-3">
+            <label for="files" class="form-label"><small class="text-muted">Добавить файлы</small></label>
+            <input type="file" multiple class="form-control" name="files" id="files">
+        </div>
+        <button class="btn btn-success" type="submit">Изменить</button>
+    </form>
+    <hr>
+    
+
+
+    <div class="btn-group">
+        <button  class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalWindow">
+            Удалить папку
+        </button>
+        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#ModalWindow-2">
+            Создать папку
+        </button>
+        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#ModalWindow-3">
+            Создать файл
+        </button>
+    </div>
+        
+
+        <div class="modal fade" id="ModalWindow" tabindex="-1" data-bs-backdrop="static" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ModalLabel">Подтвердите удаление папки</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы точно хотите удалить папку <i class="text-muted">"{{ folder.name }}"</i> ?
+                </div>
+                <div class="modal-footer">
+
+                    <a class="btn btn-danger" href="{% url 'delete_folder' folder.id %}">
+                        Удалить папку
+                    </a>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="ModalWindow-2" tabindex="-1" data-bs-backdrop="static" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ModalLabel">Создание папки</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{% url 'create_folder' %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="hidden" name="where_to" value="folder">
+                        <input type="hidden" name="id" value="{{ folder.id }}">
+                        <input type="text" class="form-control" name="name" placeholder="Название папки">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">
+                            Создать папку
+                        </button>
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="ModalWindow-3" tabindex="-1" data-bs-backdrop="static" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ModalLabel">Создание файла</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{% url 'create_file' %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="hidden" name="where_to" value="folder">
+                        <input type="hidden" name="id" value="{{ folder.id }}">
+                        <input type="text" class="form-control" name="name" placeholder="Название файла">
+                        <pre>
+                            <textarea class="form-control" rows="14" name="content" placeholder="Содержимое файла"></textarea>
+                        </pre>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">
+                            Создать файл
+                        </button>
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div> 
+
+{% endblock content %}

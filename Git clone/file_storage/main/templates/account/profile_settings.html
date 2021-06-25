@@ -1,0 +1,93 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+{% block content %}
+
+<h4>Настройки профиля</h4>
+<hr>
+{% if messeng %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <img src="{% static 'images/warning.svg' %}" width="30px"></img>
+        {{ messeng }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>    
+{% endif %}
+<form action="{% url 'profile_settings' %}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="what_it" value="change_user_data">
+    {% if request.user.profile.image %}
+        <img src="{{ request.user.profile.image.url }}" height="200px" width="200px" style="object-fit: cover; border-radius: 100px;">
+    {% else %}
+        <img src="{% static 'images/none_photo.jpg' %}" height="200px" width="200px" style="object-fit: cover; border-radius: 100px;">
+    {% endif %}
+        <div class="mb-3">
+        <label for="image" class="form-label"><small class="text-muted">Аватарка</small></label>
+        <input type="file" class="form-control" id="image" name="image" accept=".jpg, .jpeg, .png">
+    </div>
+    <div class="mb-3">
+        <label for="username" class="form-label"><small class="text-muted">Имя пользователя</small></label>
+        <input type="text" class="form-control" value="{{ request.user.profile.slug }}" id="username" name="username">
+    </div>
+    <div class="mb-3">
+        <label for="first_name" class="form-label"><small class="text-muted">Имя</small></label>
+        <input type="text" class="form-control" value="{{ request.user.first_name }}" id="first_name" name="first_name">
+    </div>
+    <div class="mb-3">
+        <label for="last_name" class="form-label"><small class="text-muted">Фамилия</small></label>
+        <input type="text" class="form-control" value="{{ request.user.last_name }}" id="last_name" name="last_name">
+    </div>
+    <div class="mb-3">
+        <label for="bio" class="form-label"><small class="text-muted">Подробнее</small></label>
+        <textarea class="form-control" name="bio"  rows="10">{{ request.user.profile.bio }}</textarea>
+    </div>
+    <button class="btn btn-success" type="submit">Сохранить</button>
+    <hr>
+</form>
+
+
+<button  class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalWindow">
+    Изменить пароль
+</button>
+<div class="modal" id="ModalWindow" tabindex="-1" data-bs-backdrop="static" aria-labelledby="ModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ModalLabel">Создание нового пароля</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'profile_settings' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="what_it" value="change_password">
+                <div class="modal-body" style="padding-bottom: 0px;">
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Новый пароль</label>
+                        <input type="password" class="form-control" id="password" name="password">
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="check">
+                        <label class="form-check-label" for="check">Показать пароль</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <script>
+        let pass_checked = document.getElementById('check')
+        let = pass_input = document.getElementById('password')
+        pass_checked.onclick = function () {
+            if (this.checked){
+                pass_input.type = 'text'
+            }else {
+                pass_input.type = 'password'
+            }
+        }
+    </script>
+{% endblock %}

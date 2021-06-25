@@ -1,0 +1,84 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+
+{% block css %}
+    <style>
+        .actions {
+            margin-top: 20px;
+            margin-bottom: 0px;
+
+        }
+    </style>
+{% endblock css %}
+
+{% block content %}
+<a href="{% url 'dashboard' repository.owner.slug %}">{{ repository.owner }}</a> / <a href="{% url 'repository_view' repository.id %}">{{ repository.name }} </a>/
+    {% for i in folder_tree %}
+        <a href="{% url 'folder_view' i.id %}">{{ i.name }} </a>/
+    {% endfor %}
+    <a href="{% url 'file_fiew' file_data.id %}">{{ file_data.name }} </a>/
+
+    {% if file.1 == 'read' %}
+        {% if file_data.repository.owner == request.user.profile %}
+            <form action="{% url 'edit_file' file_data.id %}" method="post">
+                {% csrf_token %}
+
+                    <div class="input-group actions">
+                        
+                        <input type="text" class="form-control" name="filename" id="filename" value="{{ file_data.name }}">
+                        <button class="btn btn-primary btn-sm" type="submit">Сохранить</button>
+
+                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#ModalWindow">
+                            <img src="https://img.icons8.com/material-outlined/24/000000/delete.png"/>
+                        </button>
+                    </div>
+
+                    <div class="modal fade" id="ModalWindow" tabindex="-1" data-bs-backdrop="static" aria-labelledby="ModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="ModalLabel">Подтвердите удаление файла</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Вы точно хотите удалить файл <i class="text-muted">"{{ file_data.name }}"</i> ?
+                            </div>
+                            <div class="modal-footer">
+            
+                                <a class="btn btn-danger" href="{% url 'delete_file' file_data.id %}">
+                                    Удалить файл
+                                </a>
+                            </div>
+                        </div>
+                        </div>
+                    </div> 
+
+                
+                <pre><textarea class="form-control" name="content" id="content" style="overflow-y:hidden; resize: none;">{{ file.0 }}</textarea></pre>
+            </form>
+        {% else %}
+            <pre style="margin-top: 36px;"><textarea disabled class="form-control" name="content" id="content" style="overflow-y:hidden; resize: none;">{{ file.0 }}</textarea></pre>
+        {% endif %}
+
+    {% else %}
+        <p></p>
+        <img src="{% url 'get_image' file_data.id %}" style="width: 100%;">
+    {% endif %}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        let textarea = document.getElementById('content')
+        
+        textarea.setAttribute('style', 'height:' + (textarea.scrollHeight) + 'px;overflow-y:hidden; resize: none;');
+        
+    });
+
+    $('#content').bind('input propertychange', function() {
+        console.log(this)
+        this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden; resize: none;');
+    });
+    
+</script>
+{% endblock %}

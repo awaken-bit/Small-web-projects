@@ -1,0 +1,98 @@
+{% extends 'main/index.html' %}
+
+{% block css %}
+<style>
+    #more {
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 15px;
+        display: block;
+        
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h4>Поиск репозиториев</h4>
+<hr>
+
+<form action="{% url 'search_repositorys' %}" method="post">
+    {% csrf_token %}
+    <input type="text" class="form-control" name="name" placeholder="Название репозитория" value="{{ query }}">
+    <button type="submit" class="btn btn-success">Искать</button>
+</form>
+{% if repositorys %}
+    {% for i in repositorys %}
+        {% if forloop.last %}
+            <div class="card" id="last" data="{{ i.0.id }}" style="margin-top: 15px;">
+        {% else %}
+            <div class="card" style="margin-top: 15px;">
+        {% endif %}
+            <div class="card-header">
+                {{ i.0.owner.slug }}
+            </div>
+            <div class="card-body">
+                <a href="{% url 'repository_view' i.0.id %}" target="_blank" class="card-text">{{ i.0.name }}</a>
+                <small class="text-muted" style="float: right;">{{ i.1 }}</small>
+            </div>
+        </div>
+    {% endfor %}
+    {% if lenght == 5 %}
+        <button class="btn btn-success" id='more'>Ещё репозиториев</button>
+    {% endif %}
+{% endif %}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+    let last_repository = document.getElementById('last')
+    let button_load_repositorys = document.getElementById('more')
+
+    button_load_repositorys.onclick = function () {
+        api_comments({
+            id: last_repository.getAttribute('data'),
+            name: '{{ query }}'
+        })
+    }
+    function api_comments(dat) {
+            $.ajax({
+                url: '{% url "search_repositorys_api" %}',
+                method: 'POST',
+                data: dat,
+                headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                success: function(data) {
+                    console.log(data, dat, '{% url "repository_view" 4 %}')
+                    let html = ''
+                    if (Array.isArray(data.messeng)) {
+                        for (let i=0; i < data.messeng.length; i++) {
+                            if (i != data.messeng.length - 1){
+                                html += `<div class="card" style="margin-top: 15px;">`
+                            }else {
+                                html += `<div class="card" id="last" data="${data.messeng[i].id}" style="margin-top: 15px;">`
+                            }
+                            html += `<div class="card-header">${data.messeng[i].username}</div>
+                            <div class="card-body">
+                                <a href="/repository/${data.messeng[i].id}" target="_blank" class="card-text">${data.messeng[i].name}</a>
+                                <small class="text-muted" style="float: right;">${data.messeng[i].time}</small>
+                            </div>
+                            </div>`
+                        }
+                        last_repository.removeAttribute('id')
+                        last_repository.removeAttribute('data')
+
+                        last_repository.insertAdjacentHTML(
+                            'afterend',
+                            html
+                        )
+                        last_repository = document.getElementById('last')
+                        if (data.messeng.length < 5) {
+                            button_load_repositorys.style.display = 'none'
+                        }
+                    }
+                },
+                error: function(response){
+                    console.log(response);
+                }
+            })
+        }
+</script>
+{% endblock %}

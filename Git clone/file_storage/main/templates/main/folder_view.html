@@ -1,0 +1,62 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+
+{% block css %}
+    <style>
+        .settings {
+            margin-top: 20px;
+            margin-left: auto;
+            display: block;
+            width: min-content;
+        }
+    </style>
+{% endblock css %}
+
+{% block content %}
+
+{% for i in folder_tree %}
+    {% if forloop.first %}
+        <a href="{% url 'dashboard' i.owner.slug %}">{{ i.owner }}</a> / <a href="{% url 'repository_view' i.id %}">{{ i.name }} </a>/
+    {% else %}
+        <a href="{% url 'folder_view' i.id %}">{{ i.name }} </a>/
+    {% endif %}
+{% endfor %}
+<div class="settings">
+        <div class="btn-group">
+            <a href="{% url 'download_folder' folder.id %}" class="btn btn-success btn-sm"><img src="https://img.icons8.com/material-sharp/24/000000/download--v1.png"/></a>
+            {% if folder.owner.owner == request.user.profile %}
+                <a href="{% url 'folder_settings' folder.id %}" class="btn btn-warning btn-sm" ><img src="https://img.icons8.com/metro/26/000000/settings.png"/></a>
+            {% endif %}
+        </div>
+</div>
+
+
+    <div class="card" style="width: auto;">
+        <ul class="list-group list-group-flush">
+            {% for i in above %}
+                {% if i.1 %}
+                <li class="list-group-item"><img height="23" width="23" src="https://img.icons8.com/color/48/000000/folder-invoices--v1.png"/>
+                        <small class="text-muted" style="float: right;">{{ i.2 }}</small>
+                        <a href="{% url 'folder_view' i.0.id %}">{{ i.0.name }}</a></li>
+                {% else %}
+                    {% if i.2 == 'py' %}
+                        <li class="list-group-item"><img height="23" width="23" src="https://img.icons8.com/color/48/000000/python.png"/>
+                            <small class="text-muted" style="float: right;">{{ i.3 }}</small>
+                            <a href="{% url 'file_fiew' i.0.id %}">{{ i.0.name }}</a></li>
+                    {% elif i.2 == 'txt' %}
+                        <li class="list-group-item"><img height="23" width="23" src="https://img.icons8.com/small/64/000000/txt.png"/>
+                            <small class="text-muted" style="float: right;">{{ i.3 }}</small>
+                            <a href="{% url 'file_fiew' i.0.id %}">{{ i.0.name }}</a></li>
+                    {% else %}
+                        <li class="list-group-item"><img height="23" width="23" src="https://img.icons8.com/fluent/48/000000/file.png"/>
+                            <small class="text-muted" style="float: right;">{{ i.3 }}</small>
+                            <a href="{% url 'file_fiew' i.0.id %}">{{ i.0.name }}</a></li>
+                    {% endif %}
+                    
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+
+{% endblock %}

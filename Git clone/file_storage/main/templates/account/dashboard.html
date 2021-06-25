@@ -1,0 +1,115 @@
+{% extends 'main/index.html' %}
+{% load static %}
+
+{% block css %}
+    <style>
+        a {
+            text-decoration: none;
+        }
+        
+    </style>
+{% endblock css %}
+
+{% block content %}
+    <span class='user'>
+        <h4>{{ profile.slug }}</h4>
+        <hr>
+        {% if messeng %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <img src="{% static 'images/warning.svg' %}" width="30px"></img>
+                {{ messeng }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>    
+        {% endif %}
+
+        <div style="display: inline-block; width: 100%;">
+            {% if profile.image %}
+                <img src="{{ profile.image.url }}" height="200px" width="200px" style="object-fit: cover; border-radius: 100px;">
+            {% else %}
+                <img src="{% static 'images/none_photo.jpg' %}" height="200px" width="200px" style="object-fit: cover; border-radius: 100px;">
+            {% endif %}
+            <p></p>
+            {% if profile == request.user.profile %}
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#ModalWindow" style="float: right;">
+                    Создать репозиторий
+                </button>
+            {% else %}
+                {% if profile in request.user.profile.favorites.all %}
+                    <a href="{% url 'follow' profile.slug %}" class="btn btn-secondary btn-sm">Unfollow</a>
+                {% else %}
+                    <a href="{% url 'follow' profile.slug %}" class="btn btn-primary btn-sm">Follow</a>
+                {% endif %}
+            {% endif %}
+            <div class="modal fade" id="ModalWindow" tabindex="-1" data-bs-backdrop="static" aria-labelledby="ModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ModalLabel">Создание репозитория</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{% url 'create_repository' %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <input type="text" name="name" required class="form-control" placeholder="Название репозитория">
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" name="is_private" class="form-check-input" id="is_private">
+                                <label class="form-check-label" for="is_private">
+                                    Приватный репозиторий
+                                </label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success" >
+                                Создать репозиторий
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+                </div>
+            </div> 
+
+        </div>
+
+        {% if repositorys %}
+            <h6>Список репозиториев</h6>
+            {% if request.user == profile.owner %}
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    {% for i in repositorys %}
+                        <div class="col">
+                            <div class="card border-primary mb-3" style="max-width: 18rem;">
+                                <div class="card-header">
+                                    <a href="{% url 'repository_view' i.0.id %}">{{ i.0 }}</a>
+                                </div>
+                                <div class="card-footer bg-transparent ">
+                                    <small class="text-muted">{{ i.1 }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    {% for i in repositorys %}
+                        {% if not i.0.is_private %}
+                            <div class="col">
+                                <div class="card border-primary mb-3" style="max-width: 18rem;">
+                                    <div class="card-header">
+                                        <a href="{% url 'repository_view' i.0.id %}">{{ i.0 }}</a>
+                                    </div>
+                                    <div class="card-footer bg-transparent ">
+                                        <small class="text-muted">{{ i.1 }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% else %}
+            <h6>Пока репозиториев нет</h6>
+        {% endif %}
+    </span>
+{% endblock %}

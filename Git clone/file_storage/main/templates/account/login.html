@@ -1,0 +1,33 @@
+{% extends 'main/index.html' %}
+
+{% block content %}
+
+<h1>Log-in</h1>
+    {% if form.errors %}
+        <p>
+            Your username and password didn't match.
+            Please try again.
+        </p>
+    {% else %}
+        <p>Please, use the following form to log-in:</p>
+    {% endif %}
+    <div class="login-form">
+        <form action="{% url 'login' %}" method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <input type="text" class="form-control" name="username" placeholder="Login">
+            </div>
+            <div class="mb-3">
+                <input type="password" class="form-control" name="password" placeholder="Password">
+            </div>
+            <div class="btn-group">
+                <input type="submit" value="Log-in" class="btn btn-success btn-sm">
+                <a href="{% url 'social:begin' 'google-oauth2' %}" class="btn btn-info btn-sm">
+                    <img height="30" width="30" src="https://img.icons8.com/fluent/48/000000/google-logo.png"/>
+                    Google
+                </a>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}
