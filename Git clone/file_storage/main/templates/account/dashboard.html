@@ -34,6 +34,7 @@
                     Создать репозиторий
                 </button>
             {% else %}
+		<small class="text-muted">{{ profile.profile_set.count }}</small>
                 {% if profile in request.user.profile.favorites.all %}
                     <a href="{% url 'follow' profile.slug %}" class="btn btn-secondary btn-sm">Unfollow</a>
                 {% else %}
