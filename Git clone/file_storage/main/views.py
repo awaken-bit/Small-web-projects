@@ -524,7 +524,7 @@ def create_repository(request):
         repository = Repository(
             owner = request.user.profile,
             name = speks['name'],
-            is_private = True if 'is_private' in speks == 'on' else False,
+            is_private = True if 'is_private' in speks else False,
             created_at = datetime.datetime.today(),
             changed_at = datetime.datetime.today()
         )
