@@ -14,7 +14,7 @@
 {% endblock css %}
 
 {% block content %}
-<a href="{% url 'dashboard' repository.owner.slug %}">{{ repository.owner }}</a> / <a href="{% url 'repository_view' repository.id %}">{{ repository.name }} </a>/ 
+<a href="{% url 'dashboard' repository.owner.slug %}">{{ repository.owner.slug }}</a> / <a href="{% url 'repository_view' repository.id %}">{{ repository.name }} </a>/ 
 
 <div class="settings">
         <div class="btn-group">
