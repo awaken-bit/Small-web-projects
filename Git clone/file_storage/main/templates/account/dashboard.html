@@ -85,6 +85,9 @@
                                 </div>
                                 <div class="card-footer bg-transparent ">
                                     <small class="text-muted">{{ i.1 }}</small>
+                                    {% if i.0.is_private %}
+										<img src="https://img.icons8.com/material-outlined/24/000000/lock-2.png" style="float: right" />
+									{% endif %}
                                 </div>
                             </div>
                         </div>
