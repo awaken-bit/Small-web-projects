@@ -13,7 +13,7 @@
 {% endblock css %}
 
 {% block content %}
-<a href="{% url 'dashboard' repository.owner.slug %}">{{ repository.owner }}</a> / <a href="{% url 'repository_view' repository.id %}">{{ repository.name }} </a>/
+<a href="{% url 'dashboard' repository.owner.slug %}">{{ repository.owner.slug }}</a> / <a href="{% url 'repository_view' repository.id %}">{{ repository.name }} </a>/
     {% for i in folder_tree %}
         <a href="{% url 'folder_view' i.id %}">{{ i.name }} </a>/
     {% endfor %}
