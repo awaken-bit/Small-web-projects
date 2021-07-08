@@ -17,7 +17,7 @@
 
 {% for i in folder_tree %}
     {% if forloop.first %}
-        <a href="{% url 'dashboard' i.owner.slug %}">{{ i.owner }}</a> / <a href="{% url 'repository_view' i.id %}">{{ i.name }} </a>/
+        <a href="{% url 'dashboard' i.owner.slug %}">{{ i.owner.slug }}</a> / <a href="{% url 'repository_view' i.id %}">{{ i.name }} </a>/
     {% else %}
         <a href="{% url 'folder_view' i.id %}">{{ i.name }} </a>/
     {% endif %}
