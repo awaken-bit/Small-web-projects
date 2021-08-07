@@ -7,7 +7,6 @@ from django.contrib.auth import authenticate, login
 
 
 
-
 def index(request):
     data = {
         'page': 'main',
