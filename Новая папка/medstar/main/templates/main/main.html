@@ -1,0 +1,13 @@
+{% extends 'main/index.html' %}
+
+
+{% block content %}
+{% if request.user.is_authenticated %}
+    <h1>{{ request.user.doctor.hospital }}</h1>
+    {{ request.user.first_name }} / {{ request.user.last_name }} / {{ request.user.doctor.patronymic }}
+
+    {{ request.user.doctor.next_doctor.all }}
+{% else %}
+    <h1>Войдите или зарегистрируйтесь</h1>
+{% endif %}
+{% endblock %}

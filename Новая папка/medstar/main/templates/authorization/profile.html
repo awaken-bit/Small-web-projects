@@ -1,0 +1,36 @@
+{% extends 'main/index.html' %}
+
+
+{% block content %}
+
+
+    <div style="width: fit-content; margin: 10px 0px 0px 15px">
+        <div class="mb-3">
+            <label for="name" class="form-label"><small class="text-muted">Логин</small></label>
+            <input type="text" class="form-control" id="name" value="{{ request.user.username }}" readonly disabled>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label"><small class="text-muted">Пароль</small></label>
+            <input type="password" class="form-control" id="password" value="{{ request.user.doctor.password }}" readonly disabled>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="check">
+            <label class="form-check-label" for="check">
+                Показать пароль
+            </label>
+        </div>
+        <a href="{% url 'logout' %}" class="btn btn-danger" style="margin-top: 10px;">Выйти</a>
+    </div>
+
+    <script>
+        let check = document.getElementById('check')
+        let password = document.getElementById('password')
+        check.onclick = function () {
+            if (this.checked){
+                password.type = 'text'
+            }else {
+                password.type = 'password'
+            }
+        }
+    </script>
+{% endblock %}
