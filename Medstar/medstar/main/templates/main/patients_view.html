@@ -1,0 +1,355 @@
+{% extends 'main/index.html' %}
+
+
+{% block content %}
+
+<button class="btn btn-primary" id="add_patient_button" style="left: 50%;
+                                        width: 180px;
+                                        margin-top: 80px;
+                                        margin-left: -90px;
+                                        position: absolute;
+                                        display: block;" data-bs-toggle="modal" data-bs-target="#Modal-create">
+        Добавить пациента
+</button>
+<div class="mb-3" style="width: fit-content; margin-top: 10px;">
+    <label for="search" class="form-label"><small class="text-muted">Поиск</small></label>
+    <input type="text" id="search" class="form-control" placeholder="Фамилия">
+</div>
+
+<table class="table align-middle table-hover table-bordered caption-top" id="patients-table">
+    <caption style="padding-top: 0px;">Количество пациентов: {{ lenght }}</caption>
+    <thead>
+        <tr>
+            <th scope="col">Фамилия</th>
+            <th scope="col">Имя</th>
+            <th scope="col">Отчество</th>
+            <th scope="col">Дата рождения</th>
+            <th scope="col">Группа крови</th>
+            <th scope="col">Заболевания</th>
+            <th scope="col">Номер телефона</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for i in patients %}
+            <tr class="patient_elem" id="{{ i.0.id }}" data-bs-toggle="modal" data-bs-target="#Modal-edit">
+                <td>{{ i.0.last_name }}</td>
+                <td>{{ i.0.first_name }}</td>
+                <td>{{ i.0.patronymic }}</td>
+                <td>{{ i.1 }}</td>
+                <td>{{ i.0.blood_type }}</td>
+                <td>{% if i.0.diseases.all %}
+                        {% for j in i.0.diseases.all %}
+                            {% if not forloop.last %}
+                                {{ j }}, 
+                            {% else %}
+                                {{ j }}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        Нет
+                    {% endif %}</td>
+                <td>{{ i.0.phone_numder }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+    <div class="modal fade" id="Modal-edit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Изменить</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{% url 'edit_patient' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="id" id="patient_id">
+                    <div class="modal-body" id="modal-edit">
+                        <div class="mb-3">
+                            <label for="last_name-edit" class="form-label"><small class="text-muted">Фамилия</small></label>
+                            <input type="text" class="form-control" name="last_name" required id="last_name-edit">
+                        </div>
+                        <div class="mb-3">
+                            <label for="first_name-edit" class="form-label"><small class="text-muted">Имя</small></label>
+                            <input type="text" class="form-control" name="first_name" required id="first_name-edit">
+                        </div>
+                        <div class="mb-3">
+                            <label for="patronymic-edit" class="form-label"><small class="text-muted">Отчество</small></label>
+                            <input type="text" class="form-control" name="patronymic" required id="patronymic-edit">
+                        </div>
+                        <div class="mb-3">
+                            <label for="birth_date-edit" class="form-label"><small class="text-muted">Дата рождения</small></label>
+                            <input type="date" class="form-control" name="birth_date" required id="birth_date-edit">
+                        </div>
+                        <div class="mb-3">
+                            <label for="additiona_information-edit" class="form-label"><small class="text-muted">Дополнительная информация</small></label>
+                            <textarea class="form-control" rows="6" name="additiona_information" id="additiona_information-edit"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="blood_type-edit" class="form-label"><small class="text-muted">Группа крови</small></label>
+                            <select class="form-select" name="blood_type" id="blood_type-edit">
+                                <option value="I положительная" selected>I положительная</option>
+                                <option value="I отрицательная">I отрицательная</option>
+                                <option value="II положительная">II положительная</option>
+                                <option value="II отрицательная">II отрицательная</option>
+                                <option value="III положительная">III положительная</option>
+                                <option value="III отрицательная">III отрицательная</option>
+                                <option value="IV положительная">IV положительная</option>
+                                <option value="IV отрицательная">IV отрицательная</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone-edit" class="form-label"><small class="text-muted">Номер телефона</small></label>
+                            <input type="tel" class="form-control" name="phone" required id="phone-edit">
+                        </div>
+                        <datalist id="diseases-data">
+                            {% for i in diseases %}
+                                <option value="{{ i }}">
+                            {% endfor %}
+                        </datalist>
+                        <label class="form-label"><small class="text-muted">Заболевания</small></label>
+                        <div class="disease_cards">
+
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="add-disease-edit">Добавить заболевание</button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target="#Modal-delete">
+                            Удалить
+                        </button>
+                        <button type="submit" class="btn btn-primary">Изменить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="Modal-create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Добавить</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{% url 'add_patient' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="modal-body" id="modal-edit">
+                        <div class="mb-3">
+                            <label for="last_name-edit" class="form-label"><small class="text-muted">Фамилия</small></label>
+                            <input type="text" class="form-control" name="last_name" required id="last_name-create">
+                        </div>
+                        <div class="mb-3">
+                            <label for="first_name-edit" class="form-label"><small class="text-muted">Имя</small></label>
+                            <input type="text" class="form-control" name="first_name" required id="first_name-create">
+                        </div>
+                        <div class="mb-3">
+                            <label for="patronymic-edit" class="form-label"><small class="text-muted">Отчество</small></label>
+                            <input type="text" class="form-control" name="patronymic" required id="patronymic-create">
+                        </div>
+                        <div class="mb-3">
+                            <label for="birth_date-edit" class="form-label"><small class="text-muted">Дата рождения</small></label>
+                            <input type="date" class="form-control" name="birth_date" required id="birth_date-create">
+                        </div>
+                        <div class="mb-3">
+                            <label for="additiona_information-create" class="form-label"><small class="text-muted">Дополнительная информация</small></label>
+                            <textarea class="form-control" rows="6" name="additiona_information" id="additiona_information-create"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="blood_type-edit" class="form-label"><small class="text-muted">Группа крови</small></label>
+                            <select class="form-select" name="blood_type" id="blood_type-create">
+                                <option value="I положительная" selected>I положительная</option>
+                                <option value="I отрицательная">I отрицательная</option>
+                                <option value="II положительная">II положительная</option>
+                                <option value="II отрицательная">II отрицательная</option>
+                                <option value="III положительная">III положительная</option>
+                                <option value="III отрицательная">III отрицательная</option>
+                                <option value="IV положительная">IV положительная</option>
+                                <option value="IV отрицательная">IV отрицательная</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone-edit" class="form-label"><small class="text-muted">Номер телефона</small></label>
+                            <input type="tel" class="form-control" name="phone" required id="phone-create">
+                        </div>
+                        <label class="form-label"><small class="text-muted">Заболевания</small></label>
+                        <div class="disease_cards">
+
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="add-disease-create">Добавить заболевание</button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="Modal-delete" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Удаление пациента</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-danger">Удалить</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+        // Маски для ввода телефона
+        $("#phone-edit").mask("+7 (999) 99-99-999")
+        $("#phone-create").mask("+7 (999) 99-99-999")
+
+        // Поиск пациентов
+        let search_input = document.getElementById('search')
+        let patients_table = document.getElementById('patients-table')
+        $('#search').keydown(function(e) {
+            if(e.keyCode === 13) {
+                $.ajax({
+                    url: "{% url 'search_patients' %}",
+                    method: 'POST',
+                    data: {name: this.value},
+                    headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                    success: function(data) {
+                        console.log(data)
+                        patients_table.children[0].textContent = `Количество пациентов: ${data.data.length}`
+                        let html = ''
+                        search_input.value = ''
+                        if (data.data){
+                            for (let index = 0; index < data.data.length; index++) {
+                                const element = data.data[index];
+
+                                html += `<tr class="patient_elem" id="${ element.id }" data-bs-toggle="modal" data-bs-target="#Modal-edit">
+                                            <td>${ element.last_name }</td>
+                                            <td>${ element.first_name }</td>
+                                            <td>${ element.patronymic }</td>
+                                            <td>${ element.birth_date }</td>
+                                            <td>${ element.blood_type }</td>`
+                                
+                                if (element.diseases) {
+                                    html += '<td>'
+                                    for (let disease = 0; disease < element.diseases.length; disease++) {
+                                        console.log('Warning')
+                                        if (disease == element.diseases.length - 1){
+                                            html += element.diseases[disease]
+                                        }else{
+                                            html += `${element.diseases[disease]}, `
+                                        }
+                                    }
+                                    html += `</td>`
+                                }else{
+                                    html += `<td>Нет</td>`
+                                }
+                                html += `<td>${ element.phone_numder }</td>
+                                        </tr>`
+                            }
+                            patients_table.children[2].innerHTML = html
+                        }
+                    }
+                })
+            }
+        })
+        
+        // Информация о пациенте
+        let buttonn_add_disease = document.getElementById('add-disease-edit')
+        let button_delete_diseases= document.getElementsByClassName('delete-diseases')
+        let patients_elems = document.getElementsByClassName('patient_elem')
+        let desease_cards = document.getElementsByClassName('disease_cards')
+        let add_patient_button = document.getElementById('add_patient_button')
+        let button_add_disease_in_form_add = document.getElementById('add-disease-create')
+
+        buttonn_add_disease.onclick = () => {
+            add_disease()
+        }
+        button_add_disease_in_form_add.onclick = () => {
+            add_disease()
+        }
+        add_patient_button.onclick = () =>  {
+            for (let index = 0; index < desease_cards.length; index++) {
+                const element = desease_cards[index];
+                element.innerHTML = ''
+                                
+            }
+        }
+
+        function addinfo() {
+            for (let index = 0; index < patients_elems.length; index++) {
+                const element = patients_elems[index]
+                element.onclick = () => {
+                    $.ajax({
+                    url: "{% url 'patient_info' %}",
+                    method: 'POST',
+                    data: {id: element.id},
+                    headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                    success: function(data) {
+                        console.log(data)
+                        if (data.data){
+                            document.getElementById('first_name-edit').value = data.data.first_name
+                            document.getElementById('last_name-edit').value = data.data.last_name
+                            document.getElementById('patronymic-edit').value = data.data.patronymic
+                            document.getElementById('birth_date-edit').value = data.data.birth_date.split('-').reverse().join('-')
+                            document.getElementById('blood_type-edit').value = data.data.blood_type
+                            document.getElementById('phone-edit').value = data.data.phone_numder
+                            document.getElementById('patient_id').value = data.data.id
+                            document.getElementById('additiona_information-edit').value = data.data.additiona_information
+                            
+                            document.getElementById('Modal-delete').children[0].
+                            children[0].
+                            children[1].
+                            innerHTML  = `<small class="text-muted">Вы точно хотите пациента : </small>
+                                            <p>${data.data.last_name} ${data.data.first_name} ${data.data.patronymic}</p>`
+                            let href = '{% url "delete_patient" 0 %}'.split('/')
+                            href[2] = data.data.id
+
+                            document.getElementById('Modal-delete').children[0].
+                            children[0].
+                            children[2].
+                            children[0].href = href.join('/')
+                            
+                            for (let index = 0; index < desease_cards.length; index++) {
+                                const element = desease_cards[index];
+                                element.innerHTML = ''
+                                
+                            }
+                            if (data.data.diseases){
+                                for (let index = 0; index < data.data.diseases.length; index++) {
+                                    const element = data.data.diseases[index];
+                                    add_disease(element)
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        }}
+        function add_disease(value='') {
+            for (let index = 0; index < desease_cards.length; index++) {
+                const element = desease_cards[index];
+                element.insertAdjacentHTML(
+                    "beforeend",
+                    `<div class='input-group mb-3'>
+                        <input class="form-control" list="diseases-data" value="${value}" name="datalist" placeholder="Добавить...">
+                        <button type="button" class="input-group-text btn btn-danger delete-diseases">Удалить</button>
+                    </div>`)
+                
+            }          
+            
+            add_button_delete_listeners()
+        }
+        function add_button_delete_listeners(params) {
+            for (let index = 0; index < button_delete_diseases.length; index++) {
+                const element = button_delete_diseases[index]
+                element.onclick = () => {
+                    element.parentNode.remove()
+                }
+            }
+        }
+        addinfo()
+        add_button_delete_listeners()
+
+    </script>
+{% endblock %}

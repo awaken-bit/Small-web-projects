@@ -1,0 +1,414 @@
+{% extends 'main/index.html' %}
+
+
+{% block content %}
+    <style>
+        .form-col {
+            width: fit-content;
+            float: left;
+            margin-right: 30px;
+        }
+    </style>
+    <h1>Все направления</h1>
+    <form id="filter_form">
+        <div class="form-col" style="width: 300px;">
+            <div style="margin-bottom: 12px; margin-top: 1px;">
+                <label class="form-label"><small class="text-muted">Пациент</small></label>
+                <select class="select_person" name="patient" placeholder='ФИО'>
+                    <option value=""></option>
+                    {% for i in request.user.doctor.hospital.patient_set.all %}
+                        <option value="{{ i.id }}" {% if parametrs.patient == i.id|slugify %}selected{% endif %}>{{ i }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label class="form-label"><small class="text-muted">Доктор</small></label>
+                <select class="select_person" name="doctor" placeholder='ФИО'>
+                    <option value=""></option>
+                    {% for i in request.user.doctor.hospital.doctor_set.all %}
+                        <option value="{{ i.id }}" {% if parametrs.doctor == i.id|slugify %}selected{% endif %}>{{ i }} ({{ i.position }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><small class="text-muted">Следующиий доктор</small></label>
+                <select class="select_person" name="next_doctor" placeholder='ФИО'>
+                    <option value=""></option>
+                    {% for i in request.user.doctor.hospital.doctor_set.all %}
+                        <option value="{{ i.id }}" {% if parametrs.next_doctor == i.id|slugify %}selected{% endif %}>{{ i }} ({{ i.position }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <a href="#" class="btn btn-primary" id="filter_link" style="margin-bottom: 10px;">Отфильтровать</a>
+        </div>
+        <div class="form-col">
+            <label class="form-label"><small class="text-muted">Дата создания</small></label>
+            <div class="input-group mb-3" style="width: fit-content;">
+                <span class="input-group-text">с</span>
+                <input type="datetime-local" name="today_date_from" value="{{ parametrs.today_date_from }}" class="form-control">
+                <span class="input-group-text">до</span>
+                <input type="datetime-local" name="today_date_to" value="{{ parametrs.today_date_to }}" class="form-control">
+            </div>
+            <label class="form-label"><small class="text-muted">Дата следующего приёма</small></label>
+            <div class="input-group mb-3" style="width: fit-content;">
+                <span class="input-group-text">с</span>
+                <input type="datetime-local" name="next_date_from" value="{{ parametrs.next_date_from }}" class="form-control">
+                <span class="input-group-text">до</span>
+                <input type="datetime-local" name="next_date_to" value="{{ parametrs.next_date_to }}" class="form-control">
+            </div>
+            <label class="form-label"><small class="text-muted">Сортировать</small></label>
+            <div class="input-group mb-3">
+                <select class="form-select" name="sorting">
+                {% if parametrs.sorting %}
+                    <option value="next_date_from_old" {% if parametrs.sorting == 'next_date_from_old' %}selected{% endif %}>Дата следующего приёма (от самой давней до самой новой)</option>
+                    <option value="next_date_from_new" {% if parametrs.sorting == 'next_date_from_new' %}selected{% endif %}>Дата следующего приёма (от самой новой до самой давней)</option>
+                    <option value="today_date_from_old" {% if parametrs.sorting == 'today_date_from_old' %}selected{% endif %}>Дата создания (от самой давней до самой новой)</option>
+                    <option value="today_date_from_new" {% if parametrs.sorting == 'today_date_from_new' %}selected{% endif %}>Дата создания (от самой новой до самой давней)</option>
+                {% else %}
+                    <option value="next_date_from_old">Дата следующего приёма (от самой давней до самой новой)</option>
+                    <option value="next_date_from_new">Дата следующего приёма (от самой новой до самой давней)</option>
+                    <option value="today_date_from_old" selected>Дата создания (от самой давней до самой новой)</option>
+                    <option value="today_date_from_new">Дата создания (от самой новой до самой давней)</option>
+                {% endif %}
+                </select>
+            </div>
+        </div>
+    </form>
+    
+    
+    <table class="table table-hover table-bordered caption-top" id="patients-table">
+        <caption style="padding-top: 0px;" id="doctors_count">Количество направлений: {{ references.paginator.count }}</caption>
+        <thead>
+            <tr>
+                <th scope="col">Дата приёма</th>
+                <th scope="col">Дата следующего приёма</th>
+                <th scope="col">Содержание</th>
+                <th scope="col">Пациент</th>
+                <th scope="col">Доктор</th>
+                <th scope="col">Следующий доктор</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in references %}
+                <tr class="reference_elem" id="{{ i.id }}" data-bs-toggle="modal" data-bs-target="#Modal-edit">
+                    <td>{{ i.today_date|date:'d-m-Y H:i' }}</td>
+                    <td>{{ i.next_date|date:'d-m-Y H:i' }}</td>
+                    {% if i.text|length > 40 %}
+                        <td>{{ i.text|slice:':40'}}...</td>
+                    {% else %}
+                        <td>{{ i.text }}</td>
+                    {% endif %}
+                    <td>{{ i.patient }}</td>
+                    <td>{{ i.doctor }} ({{ i.doctor.position }})</td>
+                    <td>{{ i.next_doctor }} ({{ i.next_doctor.position }})</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            {% if references.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="#" id="{{ references.previous_page_number }}">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% for i in range_references %}
+                {% if references.number == i %}
+                    <li class="page-item active"><a class="page-link" href="#" id="{{ i }}">{{ i }}</a></li>
+                {% elif i == '…' %}
+                    <li class="page-item disabled"><a class="page-link">{{ i }}</a></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="#" id="{{ i }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if references.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="#" id="{{ references.next_page_number }}">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div class="modal fade" id="Modal-edit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="reference_text" class="form-label"><small class="text-muted">Направление</small></label>
+                    <textarea class="form-control" rows="6" id="reference_text" readonly></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="reference_today_date" class="form-label"><small class="text-muted">Дата создания</small></label>
+                    <input type="datetime-local" class="form-control" id="reference_today_date" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="reference_next_date" class="form-label"><small class="text-muted">Дата следующего приёма</small></label>
+                    <input type="datetime-local" class="form-control" id="reference_next_date" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="reference_lenght" class="form-label"><small class="text-muted">Продолжительность (мин)</small></label>
+                    <input type="number" min="0" class="form-control" id="reference_lenght" readonly>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="reference_all_day" disabled>
+                    <label class="form-check-label" for="reference_all_day">
+                        Весь день
+                    </label>
+                </div>
+                
+                <div class="accordion" id="accordionView">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne">
+                            Пациент
+                        </button>
+                      </h2>
+                      <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionView">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="patient_full_name" class="form-label"><small class="text-muted">ФИО</small></label>
+                                <input type="text" class="form-control" id="patient_full_name" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="patient_birth_date-edit" class="form-label"><small class="text-muted">Дата рождения</small></label>
+                                <input type="date" class="form-control" id="patient_birth_date" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="patient_additiona_information-edit" class="form-label"><small class="text-muted">Дополнительная информация</small></label>
+                                <textarea class="form-control" rows="6" id="patient_additiona_information" readonly></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="blood_type-edit" class="form-label"><small class="text-muted">Группа крови</small></label>
+                                <input type="text" class="form-control" id="patient_blood_type" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="patient_phone" class="form-label"><small class="text-muted">Номер телефона</small></label>
+                                <input type="tel" class="form-control" id="patient_phone" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="patient_diseases" class="form-label"><small class="text-muted">Заболевания</small></label>
+                                <textarea class="form-control" rows="6" id="patient_diseases" readonly></textarea>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                            Доктор
+                          </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+                          <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="doctor_full_name" class="form-label"><small class="text-muted">ФИО</small></label>
+                                <input type="text" class="form-control" id="doctor_full_name" readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="doctor_department" class="form-label"><small class="text-muted">Отдел</small></label>
+                                <input type="text" class="form-control" id="doctor_department" readonly>
+                                
+                            </div>
+                            <div class="mb-3">
+                                <label for="doctor_position" class="form-label"><small class="text-muted">Должность</small></label>
+                                <input type="text" class="form-control" id="doctor_position" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="doctor_phone" class="form-label"><small class="text-muted">Номер телефона</small></label>
+                                <input type="tel" class="form-control" id="doctor_phone" readonly>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="doctor_is_director" disabled>
+                                <label class="form-check-label" for="doctor_is_director">
+                                    Главврач
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="doctor_on_vacation" disabled>
+                                <label class="form-check-label" for="doctor_on_vacation">
+                                    В отпуске
+                                </label>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                            Следующиий доктор
+                          </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+                          <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="doctor_full_name" class="form-label"><small class="text-muted">ФИО</small></label>
+                                <input type="text" class="form-control" id="next_doctor_full_name" readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="doctor_department" class="form-label"><small class="text-muted">Отдел</small></label>
+                                <input type="text" class="form-control" id="next_doctor_department" readonly>
+                                
+                            </div>
+                            <div class="mb-3">
+                                <label for="doctor_position" class="form-label"><small class="text-muted">Должность</small></label>
+                                <input type="text" class="form-control" id="next_doctor_position" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="doctor_phone" class="form-label"><small class="text-muted">Номер телефона</small></label>
+                                <input type="tel" class="form-control" id="next_doctor_phone" readonly>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="next_doctor_is_director" disabled>
+                                <label class="form-check-label" for="next_doctor_is_director">
+                                    Главврач
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="next_doctor_on_vacation" disabled>
+                                <label class="form-check-label" for="next_doctor_on_vacation">
+                                    В отпуске
+                                </label>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                      
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/sifter@0.5.4/sifter.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/microplugin@0.0.3/src/microplugin.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/selectize@0.12.6/dist/js/selectize.js"></script>
+
+        {% block css %}
+            <link href="https://cdn.jsdelivr.net/npm/selectize@0.12.6/dist/css/selectize.min.css" rel="stylesheet" />
+        {% endblock css %}
+
+
+        <script>
+
+            $('.select_person').selectize({
+                create: true,
+            });
+
+
+
+            let filter_link = document.getElementById('filter_link')
+            let filter_form = document.getElementById('filter_form')
+
+            filter_link.onclick = () => {
+                //document.location="{% url 'all_references' %}hello"
+                let atributs = ''
+
+                for (let index = 0; index < filter_form.elements.length; index++) {
+                    const element = filter_form.elements[index];
+                    
+                    if (element.value) {
+                        atributs += `${element.name}=${element.value}&`
+                    }
+                }
+                atributs = atributs.substring(0, atributs.length - 1)
+
+                if (document.location.search) {
+                    document.location = `${document.location.search.split('&')[0]}&${atributs}`
+                }else{
+                    document.location = `${document.location}?page=1&${atributs}`
+                }
+                return false
+            }
+
+
+            let page_links = document.getElementsByClassName('page-link')
+            for (let index = 0; index < page_links.length; index++) {
+                const element = page_links[index];
+                element.onclick = () => {
+                    let url = new URL(document.location)
+                    url.searchParams.set('page', element.id)
+                    document.location = url.toString()
+                    return false
+                }
+            }
+
+            let reference_elements = document.getElementsByClassName('reference_elem')
+            for (let index = 0; index < reference_elements.length; index++) {
+                const element = reference_elements[index];
+                element.onclick = () => {
+                    $.ajax({
+                        url: "{% url 'doctor_references' %}",
+                        method: 'POST',
+                        data: {id: element.id},
+                        headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                        success: function(data) {
+                            console.log(data.data)
+                            document.getElementById('reference_text').value = data.data.text
+                            document.getElementById('reference_today_date').value = `${data.data.today_date.split(' ')[0].split('-').reverse().join('-')}T${data.data.today_date.split(' ')[1]}`
+                            document.getElementById('reference_next_date').value = `${data.data.next_date.split(' ')[0].split('-').reverse().join('-')}T${data.data.next_date.split(' ')[1]}`
+                            document.getElementById('reference_lenght').value = data.data.lenght
+                            document.getElementById('reference_all_day').checked = data.data.all_day 
+                            document.getElementById('patient_full_name').value = `${data.data.patient.last_name} ${data.data.patient.first_name} ${data.data.patient.patronymic}`
+                            document.getElementById('patient_birth_date').value = data.data.patient.birth_date.split('-').reverse().join('-')
+                            document.getElementById('patient_additiona_information').value = data.data.patient.additiona_information
+                            document.getElementById('patient_blood_type').value = data.data.patient.blood_type
+                            document.getElementById('patient_phone').value = data.data.patient.phone_numder
+                            let diseases = ''
+                            for (let index2 = 0; index2 < data.data.patient.diseases.length; index2++) {
+                                const disease = data.data.patient.diseases[index2];
+
+                                if (index2 >= data.data.patient.diseases.length) {
+                                    diseases += `, ${disease}.`
+                                }else if (index2 == 0){
+                                    diseases += `${disease}`
+                                }else{
+                                    diseases += `, ${disease}`
+                                }
+                            }
+                            document.getElementById('patient_diseases').value = diseases
+
+                            document.getElementById('doctor_full_name').value = `${data.data.doctor.user.last_name} ${data.data.doctor.user.first_name} ${data.data.doctor.patronymic}`
+                            document.getElementById('doctor_department').value = data.data.doctor.department
+                            document.getElementById('doctor_position').value = data.data.doctor.position
+                            document.getElementById('doctor_phone').value = data.data.doctor.phone_numder
+                            document.getElementById('doctor_is_director').checked = data.data.doctor.is_director
+                            document.getElementById('doctor_on_vacation').checked = data.data.doctor.on_vacation
+
+                            document.getElementById('next_doctor_full_name').value = `${data.data.next_doctor.user.last_name} ${data.data.next_doctor.user.first_name} ${data.data.next_doctor.patronymic}`
+                            document.getElementById('next_doctor_department').value = data.data.next_doctor.department
+                            document.getElementById('next_doctor_position').value = data.data.next_doctor.position
+                            document.getElementById('next_doctor_phone').value = data.data.next_doctor.phone_numder
+                            document.getElementById('next_doctor_is_director').checked = data.data.next_doctor.is_director
+                            document.getElementById('next_doctor_on_vacation').checked = data.data.next_doctor.on_vacation
+                        }
+                    })
+                }
+                
+            }
+
+
+        </script>
+{% endblock %}

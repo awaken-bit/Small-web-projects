@@ -1,0 +1,482 @@
+{% extends 'main/index.html' %}
+
+
+{% block content %}
+{% if request.user.is_authenticated %}
+    <h1>{{ request.user.doctor.hospital }}</h1>
+    {{ request.user.last_name }} / {{ request.user.first_name }} / {{ request.user.doctor.patronymic }} / {{ request.user.doctor.department }}
+
+    <div class="accordion" id="accordionExample">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+              Создать направление
+            </button>
+          </h2>
+          <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+            <div class="accordion-body">
+                <form style="width: 500px;" id="form-create">
+                    {% csrf_token %}
+                    <input type="hidden" name="mode" value="create">
+                    
+                    <div class="mb-3">
+                        <label for="text_id-create" class="form-label"><small class="text-muted">Направление</small></label>
+                        <textarea class="form-control" required rows="6" name="text" id="text_id-create"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="search-create" class="form-label"><small class="text-muted">Пациент</small></label>
+                        <select class="select_person" required name="patient" placeholder='ФИО'>
+                            <option value=""></option>
+                            {% for i in request.user.doctor.hospital.patient_set.all %}
+                                <option value="{{ i.id }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="search_doctor-create" class="form-label"><small class="text-muted">Доктор</small></label>
+                        <select class="select_person" required name="next_doctor" id="doctor_select" placeholder='ФИО'>
+                            <option value=""></option>
+                            {% for i in request.user.doctor.hospital.doctor_set.all %}
+                                <option value="{{ i.id }}">{{ i }} ({{ i.position }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    
+                    
+                    <div class="mb-3">
+                        <label for="next_date-create" class="form-label"><small class="text-muted">Дата следующего приёма</small></label>
+                        <input type="text" placeholder="Выберите дату следующего приёма" name="next_date" id="next_date-create" class="form-control date">
+                    </div>
+                    <div class="mb-3">
+                        <label for="lenght-create" class="form-label"><small class="text-muted">Продолжительность (мин)</small></label>
+                        <input type="number" min="0" class="form-control" name="lenght" id="lenght-create">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="all_day" id="check-create-all_day">
+                        <label class="form-check-label" for="check-create-all_day">
+                            Весь день
+                        </label>
+                    </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Создать</button>
+                </form>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="references_radio" id="new_references_radio" value="new" checked>
+        <label class="form-check-label" for="new_references_radio">
+          Новые направления
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="references_radio" id="old_references_radio" value="old">
+        <label class="form-check-label" for="old_references_radio">
+          Старые направления
+        </label>
+    </div>
+
+    <table class="table table-hover table-bordered caption-top" id="patients-table">
+        <caption style="padding-top: 0px;" id="doctors_count">Количество направлений: {{ references|length }}</caption>
+        <thead>
+            <tr>
+                <th scope="col">Дата приёма</th>
+                <th scope="col">Дата следующего приёма</th>
+                <th scope="col">Содержание</th>
+                <th scope="col">Пациент</th>
+                <th scope="col">Доктор</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in references %}
+                <tr class="reference_elem" id="{{ i.id }}" data-bs-toggle="modal" data-bs-target="#Modal-edit">
+                    <td>{{ i.today_date|date:'d-m-Y H:i' }}</td>
+                    <td>{{ i.next_date|date:'d-m-Y H:i' }}</td>
+                    {% if i.text|length > 40 %}
+                        <td>{{ i.text|slice:':40'}}...</td>
+                    {% else %}
+                        <td>{{ i.text }}</td>
+                    {% endif %}
+                    <td>{{ i.patient }}</td>
+                    <td>{{ i.doctor }} ({{ i.doctor.position }})</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="modal fade" id="Modal-edit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="reference_text" class="form-label"><small class="text-muted">Направление</small></label>
+                    <textarea class="form-control" rows="6" id="reference_text" readonly></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="reference_today_date" class="form-label"><small class="text-muted">Дата создания</small></label>
+                    <input type="datetime-local" class="form-control" id="reference_today_date" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="reference_next_date" class="form-label"><small class="text-muted">Дата следующего приёма</small></label>
+                    <input type="datetime-local" class="form-control" id="reference_next_date" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="reference_lenght" class="form-label"><small class="text-muted">Продолжительность (мин)</small></label>
+                    <input type="number" min="0" class="form-control" id="reference_lenght" readonly>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="reference_all_day" disabled>
+                    <label class="form-check-label" for="reference_all_day">
+                        Весь день
+                    </label>
+                </div>
+                
+                <div class="accordion" id="accordionView">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne">
+                            Пациент
+                        </button>
+                      </h2>
+                      <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionView">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="patient_full_name" class="form-label"><small class="text-muted">ФИО</small></label>
+                                <input type="text" class="form-control" id="patient_full_name" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="patient_birth_date-edit" class="form-label"><small class="text-muted">Дата рождения</small></label>
+                                <input type="date" class="form-control" id="patient_birth_date" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="patient_additiona_information-edit" class="form-label"><small class="text-muted">Дополнительная информация</small></label>
+                                <textarea class="form-control" rows="6" id="patient_additiona_information" readonly></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="blood_type-edit" class="form-label"><small class="text-muted">Группа крови</small></label>
+                                <input type="text" class="form-control" id="patient_blood_type" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="patient_phone" class="form-label"><small class="text-muted">Номер телефона</small></label>
+                                <input type="tel" class="form-control" id="patient_phone" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="patient_diseases" class="form-label"><small class="text-muted">Заболевания</small></label>
+                                <textarea class="form-control" rows="6" id="patient_diseases" readonly></textarea>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                            Доктор
+                          </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+                          <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="doctor_full_name" class="form-label"><small class="text-muted">ФИО</small></label>
+                                <input type="text" class="form-control" id="doctor_full_name" readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="doctor_department" class="form-label"><small class="text-muted">Отдел</small></label>
+                                <input type="text" class="form-control" id="doctor_department" readonly>
+                                
+                            </div>
+                            <div class="mb-3">
+                                <label for="doctor_position" class="form-label"><small class="text-muted">Должность</small></label>
+                                <input type="text" class="form-control" id="doctor_position" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="doctor_phone" class="form-label"><small class="text-muted">Номер телефона</small></label>
+                                <input type="tel" class="form-control" id="doctor_phone" readonly>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="doctor_is_director" disabled>
+                                <label class="form-check-label" for="doctor_is_director">
+                                    Главврач
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="doctor_on_vacation" disabled>
+                                <label class="form-check-label" for="doctor_on_vacation">
+                                    В отпуске
+                                </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+    
+    
+                
+            
+    <!-- Development -->
+    <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sifter@0.5.4/sifter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/microplugin@0.0.3/src/microplugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/selectize@0.12.6/dist/js/selectize.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    {% block css %}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/selectize@0.12.6/dist/css/selectize.min.css" rel="stylesheet" />
+    {% endblock css %}
+
+    
+    <script>
+
+        $('.select_person').selectize({
+            create: true,
+        });
+        
+        let create_flatpickr = flatpickr('#next_date-create', {
+            enableTime: true,
+            dateFormat: "d-m-Y H:i",
+            minDate: 'today',
+            time_24hr: true,
+            disable: [
+                function(date) {
+                    // return true to disable
+                    return (date.getDay() === 0 || date.getDay() === 6);
+
+                }
+            ],
+            locale: {
+                firstDayOfWeek: 1 // start week on Monday
+            }
+        })
+
+        let instances = tippy('.date', {
+            content: 'Нет записей',
+            allowHTML: true,
+            trigger: 'click',
+            placement: 'right',
+            hideOnClick: "toggle",
+            interactive: true,
+        });
+
+        let references_mods = document.getElementsByName('references_radio')
+        let references_mode = 'new'
+
+        for (let index = 0; index < references_mods.length; index++) {
+            const element = references_mods[index];
+            element.onchange = () => {
+                references_mode = element.value
+                console.log(references_mode)
+                load_references()
+            }
+        }
+
+        reference_elements = document.getElementsByClassName('reference_elem')
+        function set_reference_data() {
+            for (let index = 0; index < reference_elements.length; index++) {
+                const element = reference_elements[index];
+                element.onclick = () => {
+                    $.ajax({
+                        url: "{% url 'doctor_references' %}",
+                        method: 'POST',
+                        data: {id: element.id},
+                        headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                        success: function(data) {
+                            console.log(data.data)
+                            document.getElementById('reference_text').value = data.data.text
+                            document.getElementById('reference_today_date').value = `${data.data.today_date.split(' ')[0].split('-').reverse().join('-')}T${data.data.today_date.split(' ')[1]}`
+                            document.getElementById('reference_next_date').value = `${data.data.next_date.split(' ')[0].split('-').reverse().join('-')}T${data.data.next_date.split(' ')[1]}`
+                            document.getElementById('reference_lenght').value = data.data.lenght
+                            document.getElementById('reference_all_day').checked = data.data.all_day 
+                            document.getElementById('patient_full_name').value = `${data.data.patient.last_name} ${data.data.patient.first_name} ${data.data.patient.patronymic}`
+                            document.getElementById('patient_birth_date').value = data.data.patient.birth_date.split('-').reverse().join('-')
+                            document.getElementById('patient_additiona_information').value = data.data.patient.additiona_information
+                            document.getElementById('patient_blood_type').value = data.data.patient.blood_type
+                            document.getElementById('patient_phone').value = data.data.patient.phone_numder
+                            let diseases = ''
+                            for (let index2 = 0; index2 < data.data.patient.diseases.length; index2++) {
+                                const disease = data.data.patient.diseases[index2];
+
+                                if (index2 >= data.data.patient.diseases.length) {
+                                    diseases += `, ${disease}.`
+                                }else if (index2 == 0){
+                                    diseases += `${disease}`
+                                }else{
+                                    diseases += `, ${disease}`
+                                }
+                            }
+                            document.getElementById('patient_diseases').value = diseases
+                            document.getElementById('doctor_full_name').value = `${data.data.doctor.user.last_name} ${data.data.doctor.user.first_name} ${data.data.doctor.patronymic}`
+                            document.getElementById('doctor_department').value = data.data.doctor.department
+                            document.getElementById('doctor_position').value = data.data.doctor.position
+                            document.getElementById('doctor_phone').value = data.data.doctor.phone_numder
+                            document.getElementById('doctor_is_director').checked = data.data.doctor.is_director
+                            document.getElementById('doctor_on_vacation').checked = data.data.doctor.on_vacation
+                        }
+                    })
+                }
+            }
+        }
+        set_reference_data()
+        
+        let form_create = document.getElementById('form-create')
+        let patients_table = document.getElementById('patients-table')
+
+        const ReferencesMySocket = new WebSocket(
+                'ws://'
+                + window.location.host
+                + '/doctor/'
+                + '{{ request.user.doctor.id }}'
+                + '/'
+        );
+
+        ReferencesMySocket.onmessage = function(e) {
+            if (references_mode == 'new') {
+                load_references()
+            }
+        }
+
+        function load_references() {
+            $.ajax({
+                url: `{% url 'doctor_references' %}?mode=${references_mode}`,
+                method: 'GET',
+                headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                success: function(data) {
+                    let html = ''
+                    console.log(data.data)
+                    if ('data' in data){
+                        for (let index = 0; index < data.data.length; index++) {
+                            const element = data.data[index];
+
+                            html += `<tr class="reference_elem" id="${ element.id }" data-bs-toggle="modal" data-bs-target="#Modal-edit">`
+                                + `<td>${ element.today_date }</td>`
+                                + `<td>${ element.next_date }</td>`
+
+                            if (element.text.length > 40){
+                                html += `<td>${ element.text.substring(0, 40) }...</td>`
+                            }else{
+                                html += `<td>${ element.text }</td>`
+                            }
+                            html += `<td>${ element.patient.last_name } ${ element.patient.first_name } ${ element.patient.patronymic }</td>`
+                                    + `<td>${ element.doctor.user.last_name } ${ element.doctor.user.first_name } ${ element.doctor.patronymic } (${ element.doctor.position })</td>`
+                                    + `</tr>`
+                        }
+                        patients_table.children[2].innerHTML = html
+                        patients_table.children[0].innerHTML = `Количество направлений: ${data.data.length}`
+                        set_reference_data()
+                    }
+                }
+            })
+        }
+        
+        form_create.onsubmit = (event) => {
+            event.preventDefault();
+            let data = {}
+            for (let index = 0; index < form_create.elements.length; index++) {
+                const element = form_create.elements[index];
+                if (element.name) {
+                    data[element.name] = element.value
+                }
+            }
+            
+            const ReferencesOtherSocket = new WebSocket(
+                'ws://'
+                + window.location.host
+                + '/doctor/'
+                + data.next_doctor
+                + '/'
+            );
+            ReferencesOtherSocket.onopen = function(m) {  
+                console.log("Соединение открыто...");
+                if (document.getElementById('check-create-all_day').checked){
+                    data.all_day = 'on'
+                }else{
+                    delete data.all_day
+                }
+                console.log(data)
+                ReferencesOtherSocket.send(JSON.stringify(data))
+                ReferencesOtherSocket.close()
+                
+            }
+            
+            
+        }
+        let doctor_id_create = document.getElementById('doctor_select')
+
+        let dates_fields = document.getElementsByClassName('date')
+        for (let index = 0; index < dates_fields.length; index++) {
+            const element = dates_fields[index];
+            element.oninput = () => {
+                $.ajax({
+                    url: "{% url 'doctor_appointments' %}",
+                    method: 'POST',
+                    data: {date: element.value, id: doctor_id_create.value},
+                    headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                    success: function(data) {
+                        if ('data' in data){
+                            
+                            let content = ''
+                            if (data.data.length >= 1){
+                                for (let index = 0; index < data.data.length; index++) {
+                                    const element = data.data[index];
+                                    content += `с ${element[0]} до ${element[1]}<br>`
+                                    
+                                }
+                            }else{
+                                content = 'Нет записей'
+                            }
+                            for (let index = 0; index < instances.length; index++) {
+                                const instance = instances[index];
+                                instance.setContent(content);
+                                
+                            }
+                            
+                        }
+                    }
+                })
+            }
+            element.onfocus = () => {
+                let all_dates = []
+                $.ajax({
+                    url: "{% url 'doctor_references_all_dates' %}",
+                    method: 'POST',
+                    data: {id: doctor_id_create.value},
+                    headers:{"X-CSRFToken": "{{ csrf_token }}"},
+                    success: function(data) {
+                        console.log(data.data)
+                        if ('data' in data){
+                            for (let index = 0; index < data.data.length; index++) {
+                                const element = data.data[index];
+                                all_dates.push(element.split('T')[0].split('-').reverse().join('-'))
+                            }
+                        }
+                        console.log(all_dates, create_flatpickr.config.disable)
+                        create_flatpickr.set('disable', all_dates.concat(create_flatpickr.config.disable))
+                    }
+                })
+            }
+        }
+    </script>
+
+    
+
+    
+    
+{% else %}
+    <h1>Войдите или зарегистрируйтесь</h1>
+{% endif %}
+{% endblock %}
