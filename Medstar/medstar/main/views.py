@@ -14,7 +14,8 @@ def index(request):
     if user.is_authenticated:
         data = {
             'page': 'main',
-            'references': user.doctor.next_doctor.order_by('next_date').filter(next_date__gt=datetime.datetime.now() + datetime.timedelta(hours=MY_TIME_ZONE))
+            'references': user.doctor.next_doctor.order_by('next_date').filter(next_date__gt=datetime.datetime.now() 
+                                                                               + datetime.timedelta(hours=MY_TIME_ZONE) - datetime.timedelta(minutes=30))
         }
     else:
         data = {
