@@ -142,10 +142,10 @@ class DoctorReference(APIView):
         if user.is_authenticated:
             if request.GET.get('mode') == 'new':
                 return Response({"data": serializers.ReferenceSerializer(user.doctor.next_doctor.order_by('next_date')
-                                .filter(next_date__gt=datetime.datetime.now() + datetime.timedelta(hours=MY_TIME_ZONE)), many=True).data})
+                                .filter(next_date__gt=datetime.datetime.now() + datetime.timedelta(hours=MY_TIME_ZONE) - datetime.timedelta(minutes=30)), many=True).data})
             elif request.GET.get('mode') == 'old':
                 return Response({"data": serializers.ReferenceSerializer(user.doctor.next_doctor.order_by('next_date')
-                                .filter(next_date__lt=datetime.datetime.now() + datetime.timedelta(hours=MY_TIME_ZONE)), many=True).data})
+                                .filter(next_date__lt=datetime.datetime.now() + datetime.timedelta(hours=MY_TIME_ZONE) - datetime.timedelta(minutes=30)), many=True).data})
     def post(self, request):
         user = request.user
         if user.is_authenticated:
