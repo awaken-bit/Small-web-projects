@@ -15,10 +15,10 @@ def getAndParseHtml(content, lxmlStr):
 @shared_task
 def information_panel():
     content_news = requests.get('https://new-science.ru').content
-    content = requests.get('https://broker.ru/brokerage/professionals').content
+    content = json.loads(requests.get('https://yandex.ru/data/combined/?w=_stocks-1&bll=stocks&sens=1').text)
 
-    changes = getAndParseHtml(content, '/html/body/section/section/section[3]/div/div/div/div[1]/div[2]/ul/li/div[2]/div[2]/div[1]/text()')
-    cours = getAndParseHtml(content, '/html/body/section/section/section[3]/div/div/div/div[1]/div[2]/ul/li/div[1]/div/text()')
+    changes = [i['data'][0]['delta'] for i in content['Stocks']['blocks'][0]['rows']] + [content['Stocks']['blocks'][2]['rows'][0]['data'][0]['delta']]
+    cours = [i['data'][0]['value'] for i in content['Stocks']['blocks'][0]['rows']] + [content['Stocks']['blocks'][2]['rows'][0]['data'][0]['value']]
 
     path_title = '//*[@id="tie-block_1560"]/div/div/ul/li/div/h2/a/text()'
     path_comment = '//*[@id="tie-block_1560"]/div/div/ul/li/div/p/text()'
@@ -32,9 +32,9 @@ def information_panel():
     
     
     data = {
-        'oil': ' '.join([cours[0], changes[0]]),
-        'usd': ' '.join([cours[3], changes[3]]),
-        'euro': ' '.join([cours[4], changes[4]]),
+        'oil': ' '.join([cours[2], changes[2]]),
+        'usd': ' '.join([cours[0], changes[0]]),
+        'euro': ' '.join([cours[1], changes[1]]),
     }
 
     # -------------
