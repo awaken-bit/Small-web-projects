@@ -68,3 +68,9 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return redirect('login')
+
+def create_new_profiles_gogle(*args, **kwargs):
+    if kwargs['is_new']:
+        Profile.objects.create(
+            owner = User.objects.get(username = kwargs['username'])
+        )
