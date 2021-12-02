@@ -17,12 +17,7 @@ def index(request, pk):
         return render(request, 'account/messeng.html', {'mes': '<h1>Нет такого пользователя</h1>'})
 
 def home(request):
-    post = Post.objects.get(id=5)
-
-    data = {
-        'post': post.owner_id
-    }
-    return render(request, 'main/home.html', data)
+    return render(request, 'main/home.html')
 
 # Chats
 def chat(request, pk):
