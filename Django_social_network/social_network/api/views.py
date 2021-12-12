@@ -15,7 +15,10 @@ class LikeOrDizlikeView(APIView):
     def post(self, request):
         user = request.user
         if user.is_authenticated:
-            profile = Profile.objects.get(owner=user)
+            try:
+                profile = Profile.objects.get(owner=user)
+            except:
+                return Response({"message": 'Нет такого пользователя'})
             speks = request.data
             
             try:
@@ -29,14 +32,14 @@ class LikeOrDizlikeView(APIView):
                 return Response({"message": 'Нет такой записи'})
 
             if 'like' in  speks:
-                if post.like_set.filter(post=post).count() == 0 and post.dizlike_set.filter(post=post).count() == 0:
+                if post.like_set.filter(owner=profile).count() == 0 and post.dizlike_set.filter(owner=profile).count() == 0:
                     obj = Like(owner=profile, post=post)
                     obj.save()
                     return Response({"message": 'Лайк'})
                 else:
                     return Response({"message": 'Вы уже оценивали этот пост'})
             elif 'dizlike' in speks:
-                if post.dizlike_set.filter(post=post).count() == 0 and post.like_set.filter(post=post).count() == 0:
+                if post.dizlike_set.filter(owner=profile).count() == 0 and post.like_set.filter(owner=profile).count() == 0:
                     obj = Dizlike(owner=profile, post=post)
                     obj.save()
                     return Response({"message": 'Дизлайк'})
@@ -54,7 +57,10 @@ class CommentView(APIView):
     def post(self, request):
         user = request.user
         if user.is_authenticated:
-            profile = Profile.objects.get(owner=user)
+            try:
+                profile = Profile.objects.get(owner=user)
+            except:
+                return Response({"message": 'Нет такого пользователя'})
             speks = request.data
             try:
                 id = int(speks['id'])
@@ -93,7 +99,10 @@ class DynamicPostLoad(APIView):
     def post(self, request):
         user = request.user
         if user.is_authenticated:
-            profile = Profile.objects.get(owner=user)
+            try:
+                profile = Profile.objects.get(owner=user)
+            except:
+                return Response({"message": 'Нет такого пользователя'})
             speks = request.data
             if 'user' in speks:
                 posts = Post.objects.order_by('-id').filter(id__lt=int(speks['last_post']), owner=profile)[:4]
