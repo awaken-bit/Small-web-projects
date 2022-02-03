@@ -18,10 +18,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
         if not self.user.is_authenticated or self.user.id != self.sender_id:
             await self.close()
-        
-        self.sender_user = Profile.objects.get(owner=self.user)
 
         try:
+            self.sender_user = Profile.objects.get(owner=self.user)
             self.addressee_user = Profile.objects.get(owner__id=self.addressee_id)
         except:
             await self.close()
@@ -109,8 +108,8 @@ class ChatGroupConsumer(AsyncWebsocketConsumer):
         if not self.user.is_authenticated:
             await self.close()
 
-        self.sender_user = Profile.objects.get(owner=self.user)
         try:
+            self.sender_user = Profile.objects.get(owner=self.user)
             self.group_adress = Group.objects.get(id=self.group_id)
         except:
             await self.close()
