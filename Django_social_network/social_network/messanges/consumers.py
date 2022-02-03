@@ -12,9 +12,14 @@ import datetime
 class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
-        self.sender_id = self.scope['url_route']['kwargs']['sender_id']
-        self.addressee_id = self.scope['url_route']['kwargs']['addressee_id']
-        self.list_id = [self.sender_id, self.addressee_id]
+        self.user = self.scope['user']
+        self.sender_id = int(self.scope['url_route']['kwargs']['sender_id'])
+        self.addressee_id = int(self.scope['url_route']['kwargs']['addressee_id'])
+        
+        if not self.user.is_authenticated or self.user.id != self.sender_id:
+            await self.close()
+        
+        self.list_id = (self.sender_id, self.addressee_id)
         
         self.chat_group_name = f'chat_{max(self.list_id)}_{min(self.list_id)}'
         # Join room group
@@ -38,6 +43,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         comment = text_data_json['text']
         new_comment = await self.create_new_comment(comment)
         
+        if not new_comment:
+            await self.close()
         
         # Send message to room group
         await self.channel_layer.group_send(
@@ -59,14 +66,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def create_new_comment(self, text):
-        sender_user = Profile.objects.get(owner=self.scope['user'])
-        addresseen = 0
-        if int(self.list_id[0]) == self.scope['user'].id:
-            addresseen = int(self.list_id[1])
-        else:
-            addresseen = int(self.list_id[0])
+        sender_user = Profile.objects.get(owner=self.user)
 
-        addressee_user = Profile.objects.get(owner__id=addresseen)
+        try:
+            addressee_user = Profile.objects.get(owner__id=self.addressee_id)
+        except:
+            return False
+
         new_comment = Messange(
             sender=sender_user,
             addressee=addressee_user,
@@ -100,7 +106,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
 class ChatGroupConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
-        self.group_id = self.scope['url_route']['kwargs']['group_id']
+        self.user = self.scope['user']
+
+        if not self.user.is_authenticated:
+            await self.close()
+
+        self.group_id = int(self.scope['url_route']['kwargs']['group_id'])
 
         
         self.chat_group_name = f'group_{self.group_id}'
@@ -125,6 +136,8 @@ class ChatGroupConsumer(AsyncWebsocketConsumer):
         comment = text_data_json['text']
         new_comment = await self.create_new_comment(comment)
         
+        if not new_comment:
+            await self.close()
         
         # Send message to room group
         await self.channel_layer.group_send(
@@ -146,8 +159,17 @@ class ChatGroupConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def create_new_comment(self, text):
-        sender_user = Profile.objects.get(owner=self.scope['user'])
-        group_adress = Group.objects.get(id=self.group_id)
+        sender_user = Profile.objects.get(owner=self.user)
+
+        try:
+            group_adress = Group.objects.get(id=self.group_id)
+        except:
+            return False
+
+        if sender_user not in group_adress.participants.all():
+            return False
+        
+        
         new_comment = MessangeGroup(
             sender=sender_user,
             addressee_group=group_adress,
